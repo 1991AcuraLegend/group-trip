@@ -15,20 +15,20 @@ type Props = {
 export function Tabs({ tabs, activeTab, onChange }: Props) {
   return (
     <div className="border-b border-sand-200">
-      <div className="flex w-full">
+      <div className="flex w-full flex-wrap">
         {tabs.map((tab) => (
         <button
           key={tab.value}
           onClick={() => onChange(tab.value)}
           className={[
-            'flex flex-1 items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-medium transition-colors min-w-0',
+            'flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
             'focus:outline-none',
             activeTab === tab.value
               ? 'border-b-2 border-ocean-500 text-ocean-600 -mb-px'
               : 'text-sand-500 hover:text-sand-700',
           ].join(' ')}
         >
-          <span className="truncate">{tab.label}</span>
+          <span>{tab.label}</span>
           {tab.count !== undefined && (
             <span
               className={[
