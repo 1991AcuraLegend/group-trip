@@ -3,7 +3,7 @@ import type { EntryType } from '@/types';
 import type { EntriesData } from '@/hooks/useEntries';
 import { getEntryName } from '@/lib/entry-helpers';
 
-export const PIXELS_PER_HOUR = 80;
+export const PIXELS_PER_HOUR = 24;
 export const POINT_EVENT_HOURS = 1;
 export const TIME_GUTTER_WIDTH = 56; // px
 
@@ -14,6 +14,7 @@ export type TimelineItem = {
   startTime: Date;
   endTime: Date;
   isPointEvent: boolean;
+  isAllDay: boolean;
   column: number;
   totalColumns: number;
   originalEntry: Flight | Lodging | CarRental | Restaurant | Activity;
@@ -64,6 +65,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
       startTime,
       endTime,
       isPointEvent: false,
+      isAllDay: true,
       column: 0,
       totalColumns: 1,
       originalEntry: f,
@@ -80,6 +82,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
       startTime,
       endTime,
       isPointEvent: false,
+      isAllDay: true,
       column: 0,
       totalColumns: 1,
       originalEntry: l,
@@ -96,6 +99,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
       startTime,
       endTime,
       isPointEvent: false,
+      isAllDay: true,
       column: 0,
       totalColumns: 1,
       originalEntry: c,
@@ -104,6 +108,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
 
   for (const r of entries.restaurants) {
     // date field is midnight UTC from DB; time is a string
+    const isAllDay = !r.time || r.time.trim() === '';
     const startTime = combineDateAndTime(new Date(r.date), r.time, 12);
     const endTime = new Date(startTime.getTime() + POINT_EVENT_HOURS * 3600 * 1000);
     items.push({
@@ -113,6 +118,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
       startTime,
       endTime,
       isPointEvent: true,
+      isAllDay,
       column: 0,
       totalColumns: 1,
       originalEntry: r,
@@ -120,10 +126,11 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
   }
 
   for (const a of entries.activities) {
+    const isAllDay = !a.startTime || a.startTime.trim() === '';
     const startTime = combineDateAndTime(new Date(a.date), a.startTime, 0);
     let endTime: Date;
     let isPointEvent: boolean;
-    if (a.endTime) {
+    if (a.endTime && a.endTime.trim() !== '') {
       endTime = combineDateAndTime(new Date(a.date), a.endTime, 1);
       // If endTime <= startTime (e.g. parse failure or same time), treat as point
       if (endTime <= startTime) {
@@ -143,6 +150,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
       startTime,
       endTime,
       isPointEvent,
+      isAllDay,
       column: 0,
       totalColumns: 1,
       originalEntry: a,
@@ -265,10 +273,54 @@ export function getItemTop(itemTime: Date, rangeStart: Date): number {
   return diffHours * PIXELS_PER_HOUR;
 }
 
+// Get the pixel offset within a 24-hour day column for an item.
+// For all-day items, returns 0. For timed items, calculates position from midnight of that day.
+export function getItemTopInDay(item: TimelineItem, dayStart: Date): number {
+  if (item.isAllDay) {
+    return 0;
+  }
+  // Calculate midnight of the starting day
+  const dayMidnight = new Date(dayStart);
+  dayMidnight.setHours(0, 0, 0, 0);
+  return getItemTop(item.startTime, dayMidnight);
+}
+
 // Pixel height for a timeline item.
 export function getItemHeight(item: TimelineItem): number {
   const durationHours = (item.endTime.getTime() - item.startTime.getTime()) / 3600000;
   return Math.max(durationHours * PIXELS_PER_HOUR, 24); // at least 24px tall
+}
+
+// Get the pixel height for an item within a single day column.
+// For all-day items, returns a fixed height. For timed items, returns height relative to that day.
+export function getItemHeightInDay(item: TimelineItem, dayStart: Date): number {
+  if (item.isAllDay) {
+    return 32; // Fixed height for all-day items
+  }
+
+  // For timed items, calculate how much of the item falls within this day
+  const dayMidnight = new Date(dayStart);
+  dayMidnight.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayMidnight);
+  dayEnd.setHours(23, 59, 59, 999);
+
+  // Clamp item to this day
+  const itemStart = item.startTime >= dayMidnight ? item.startTime : dayMidnight;
+  const itemEnd = item.endTime <= dayEnd ? item.endTime : dayEnd;
+
+  const durationHours = (itemEnd.getTime() - itemStart.getTime()) / 3600000;
+  return Math.max(durationHours * PIXELS_PER_HOUR, 24);
+}
+
+// Check if an item overlaps with a specific day.
+export function itemOverlapsDay(item: TimelineItem, dayStart: Date): boolean {
+  const dayMidnight = new Date(dayStart);
+  dayMidnight.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayMidnight);
+  dayEnd.setHours(23, 59, 59, 999);
+
+  // Item overlaps if it starts before day ends AND ends after or at day starts
+  return item.startTime <= dayEnd && item.endTime > dayMidnight;
 }
 
 // Generate an array of Date objects, one per midnight boundary, within the range.
@@ -283,18 +335,15 @@ export function getDayMarkers(range: TimelineRange): Date[] {
   return days;
 }
 
-// Generate hour labels for the time gutter (every hour within range).
-export function getHourLabels(range: TimelineRange): { label: string; top: number }[] {
+// Generate hour labels for the time gutter (every hour within a single day).
+export function getHourLabels(): { label: string; top: number }[] {
   const labels: { label: string; top: number }[] = [];
-  const d = new Date(range.startTime);
-  d.setMinutes(0, 0, 0);
-  while (d <= range.endTime) {
-    const h = d.getHours();
+  // Generate labels for all 24 hours of a day
+  for (let h = 0; h < 24; h++) {
     const label = h === 0 ? '' : h === 12 ? '12p' : h < 12 ? `${h}a` : `${h - 12}p`;
     if (label) {
-      labels.push({ label, top: getItemTop(d, range.startTime) });
+      labels.push({ label, top: h * PIXELS_PER_HOUR });
     }
-    d.setHours(d.getHours() + 1);
   }
   return labels;
 }

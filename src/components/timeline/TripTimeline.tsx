@@ -11,14 +11,16 @@ import {
   getTimelineRange,
   getDayMarkers,
   getHourLabels,
-  getItemTop,
+  itemOverlapsDay,
   PIXELS_PER_HOUR,
-  TIME_GUTTER_WIDTH,
   type TimelineItem,
 } from '@/lib/timeline-utils';
 import { TimelineBar } from '@/components/timeline/TimelineBar';
 import { TimelinePopover } from '@/components/timeline/TimelinePopover';
 import { TripHeader } from '@/components/trip/TripHeader';
+
+const COLUMN_WIDTH = 280; // px
+const COLUMN_GAP = 12; // px
 
 type Props = {
   tripId: string;
@@ -45,16 +47,32 @@ export function TripTimeline({ tripId }: Props) {
   }, [trip, items]);
 
   const dayMarkers = useMemo(() => (range ? getDayMarkers(range) : []), [range]);
-  const hourLabels = useMemo(() => (range ? getHourLabels(range) : []), [range]);
+  const hourLabels = useMemo(() => getHourLabels(), []);
 
   // Auto-scroll to first entry on mount
   useEffect(() => {
     if (!range || items.length === 0 || !scrollRef.current) return;
-    const firstItem = items.reduce((a, b) => (a.startTime < b.startTime ? a : b));
-    const offsetTop = getItemTop(firstItem.startTime, range.startTime);
-    const scrollTop = Math.max(0, offsetTop - 80);
-    scrollRef.current.scrollTop = scrollTop;
-  }, [range, items]);
+    // Find the first and last day with entries
+    let firstDay: Date | null = null;
+    for (const day of dayMarkers) {
+      const itemsOnDay = items.filter(
+        (item) =>
+          new Date(item.startTime).toDateString() ===
+          new Date(day).toDateString()
+      );
+      if (itemsOnDay.length > 0) {
+        firstDay = day;
+        break;
+      }
+    }
+    if (firstDay) {
+      const dayIndex = dayMarkers.findIndex(
+        (d) => new Date(d).toDateString() === new Date(firstDay).toDateString()
+      );
+      const scrollLeft = Math.max(0, dayIndex * (COLUMN_WIDTH + COLUMN_GAP) - COLUMN_GAP);
+      scrollRef.current.scrollLeft = scrollLeft;
+    }
+  }, [range, items, dayMarkers]);
 
   const handleBarClick = useCallback((item: TimelineItem, rect: DOMRect) => {
     setSelectedItem((prev) =>
@@ -83,8 +101,7 @@ export function TripTimeline({ tripId }: Props) {
   }
 
   const memberCount = trip.members?.length ?? 0;
-  const totalHeightPx = range ? range.totalHours * PIXELS_PER_HOUR : 0;
-
+  const dailyHeightPx = 24 * PIXELS_PER_HOUR; // 24 hours per day
   const hasEntries = items.length > 0;
 
   return (
@@ -115,71 +132,89 @@ export function TripTimeline({ tripId }: Props) {
           </Link>
         </div>
       ) : (
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-auto relative"
-        >
-          {/* Timeline canvas */}
-          <div
-            className="relative"
-            style={{ height: totalHeightPx + 80, minWidth: 320 }}
-          >
-            {/* Hour labels in the gutter */}
-            {hourLabels.map(({ label, top }) => (
-              <div
-                key={`hour-${label}-${top}`}
-                className="absolute text-[10px] text-sand-400 select-none"
-                style={{
-                  top: top - 7,
-                  left: 0,
-                  width: TIME_GUTTER_WIDTH - 4,
-                  textAlign: 'right',
-                }}
-              >
-                {label}
-              </div>
-            ))}
+        <div ref={scrollRef} className="flex-1 overflow-x-auto overflow-y-hidden bg-sand-50">
+          {/* Multi-column timeline container */}
+          <div className="inline-flex gap-3 p-4 h-full">
+            {range && dayMarkers.map((day, dayIndex) => {
+              const dateStr = new Date(day).toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+              });
 
-            {/* Horizontal hour lines */}
-            {hourLabels.map(({ top }, i) => (
-              <div
-                key={`hline-${i}`}
-                className="absolute border-t border-sand-100"
-                style={{ top, left: TIME_GUTTER_WIDTH, right: 0 }}
-              />
-            ))}
+              // Filter items that overlap with this day
+              const itemsForDay = items.filter((item) => itemOverlapsDay(item, day));
 
-            {/* Day markers */}
-            {range && dayMarkers.map((day) => {
-              const top = getItemTop(day, range.startTime);
-              const label = day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
               return (
-                <div key={day.toISOString()} className="absolute" style={{ top, left: 0, right: 0 }}>
+                <div
+                  key={`day-${dayIndex}-${day.toISOString()}`}
+                  className="flex flex-col h-full bg-white rounded-lg border border-sand-200 shadow-sm"
+                  style={{ width: COLUMN_WIDTH }}
+                >
+                  {/* Column header */}
+                  <div className="px-3 py-2 border-b border-sand-200 bg-gradient-to-b from-sand-50 to-white shrink-0">
+                    <div className="text-sm font-semibold text-ocean-700">
+                      {dateStr}
+                    </div>
+                  </div>
+
+                  {/* Column content - scrollable by time */}
                   <div
-                    className="absolute border-t-2 border-sand-300"
-                    style={{ left: TIME_GUTTER_WIDTH, right: 0 }}
-                  />
-                  <div
-                    className="absolute text-[10px] font-semibold text-sand-500 bg-white px-1 leading-none select-none"
-                    style={{ left: TIME_GUTTER_WIDTH + 4, top: 2 }}
+                    className="flex-1 relative overflow-auto"
                   >
-                    {label}
+                    {/* Hour labels and lines */}
+                    {hourLabels.map(({ label, top }, i) => (
+                      <div key={`hour-${dayIndex}-${i}`} className="absolute" style={{ top }}>
+                        <div className="text-[11px] text-sand-400 font-medium px-2 py-1 select-none">
+                          {label}
+                        </div>
+                        <div
+                          className="border-t border-sand-100 absolute"
+                          style={{ left: 0, right: 0 }}
+                        />
+                      </div>
+                    ))}
+
+                    {/* Entry bars for this day */}
+                    {itemsForDay.length > 0 ? (
+                      <div className="relative" style={{ height: dailyHeightPx }}>
+                        {/* Render all-day items first */}
+                        {itemsForDay
+                          .filter((item) => item.isAllDay)
+                          .map((item, idx) => (
+                            <TimelineBar
+                              key={item.id}
+                              item={item}
+                              dayStart={day}
+                              color={entryColors[item.type]}
+                              isColumnLayout={true}
+                              allDayIndex={idx}
+                              onClick={handleBarClick}
+                            />
+                          ))}
+                        {/* Then render timed items */}
+                        {itemsForDay
+                          .filter((item) => !item.isAllDay)
+                          .map((item) => (
+                            <TimelineBar
+                              key={item.id}
+                              item={item}
+                              dayStart={day}
+                              color={entryColors[item.type]}
+                              isColumnLayout={true}
+                              onClick={handleBarClick}
+                            />
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-sand-300">
+                        <span className="text-sm">No events</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
-
-            {/* Entry bars */}
-            {range && items.map((item) => (
-              <TimelineBar
-                key={item.id}
-                item={item}
-                rangeStart={range.startTime}
-                color={entryColors[item.type]}
-                gutterWidth={TIME_GUTTER_WIDTH}
-                onClick={handleBarClick}
-              />
-            ))}
           </div>
         </div>
       )}

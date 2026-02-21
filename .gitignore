@@ -50,3 +50,5 @@ public/uploads/*
 # scripts
 start.sh
 stop.sh
+.tunnel.log
+.tunnel.pid
