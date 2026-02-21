@@ -5,7 +5,9 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PID_FILE="$DIR/.pids"
+TUNNEL_PID_FILE="$DIR/.tunnel.pid"
 LOG_FILE="$DIR/.nextjs.log"
+TUNNEL_LOG_FILE="$DIR/.tunnel.log"
 CONTAINER="travelplanner-db"
 DB_PORT=5432
 
@@ -116,8 +118,15 @@ if ! kill -0 "$NEXT_PID" 2>/dev/null; then
   exit 1
 fi
 
+# ── Cloudflare Tunnel ────────────────────────────────────────────────────────
+echo "==> Starting Cloudflare tunnel..."
+cloudflared tunnel run --token eyJhIjoiNzg2NzA0NjQ5OWVkZjA1MWE2NzRmMTQyZmQ0YjU3ZDEiLCJ0IjoiZjJkYTVlNjAtNmU2ZS00ZDE4LWE2NmYtZGIwZmNmYWQ2OWYyIiwicyI6Ik16Um1ZVEJrTnpjdE1qTmxaQzAwTUdKbExUazBOV0l0TVROaVpESXpObUkwWVdOaSJ9 > "$TUNNEL_LOG_FILE" 2>&1 &
+TUNNEL_PID=$!
+echo "$TUNNEL_PID" > "$TUNNEL_PID_FILE"
+
 echo ""
 echo "  TravelPlanner is running at http://localhost:3000"
 echo ""
 echo "  Logs:  tail -f $LOG_FILE"
+echo "  Tunnel: tail -f $TUNNEL_LOG_FILE"
 echo "  Stop:  ./stop.sh"

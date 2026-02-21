@@ -242,48 +242,6 @@ Entry tables (all have tripId FK):
 
 ---
 
-## Workstreams
-
-### Dependency Graph
-
-```
-WS 0 (Bootstrap)
-  ├──→ WS 1 (Auth)
-  ├──→ WS 2 (Trips + Dashboard)
-  ├──→ WS 3 (Entry APIs)
-  ├──→ WS 4 (Entry Panel)
-  ├──→ WS 5 (Map)
-  └──→ WS 6 (Sharing)
-```
-
-**WS 0** is the prerequisite. **WS 1–6 can all be developed in parallel** after WS 0 completes (using stubs for cross-workstream dependencies). Merge order is sequential to avoid conflicts.
-
-### Merge Order
-
-Merge in this order. Each workstream stubs dependencies from later workstreams during development, then replaces stubs when merging.
-
-1. **WS 0** — Bootstrap (merge first, all others depend on it)
-2. **WS 1** — Auth (provides `withAuth()` consumed by WS 2, 3, 6)
-3. **WS 2** — Trips + Dashboard (provides `getTripMembership()` consumed by WS 3, 6)
-4. **WS 3** — Entry APIs (provides `useEntries()` consumed by WS 4, 5)
-5. **WS 4** — Entry Panel (provides trip detail layout, consumes WS 5's AddressAutocomplete via stub)
-6. **WS 5** — Map (replaces map placeholder in trip detail page, replaces address input stubs in forms)
-7. **WS 6** — Sharing (replaces share button placeholder in trip header)
-
-### Sub-Plan Files
-
-| File | Workstream | Description |
-|------|-----------|-------------|
-| [`plans/00-bootstrap.md`](plans/00-bootstrap.md) | Bootstrap | Project scaffold, Prisma schema, shared types, utilities |
-| [`plans/01-auth.md`](plans/01-auth.md) | Auth | NextAuth setup, login/register/forgot-password pages |
-| [`plans/02-trips-dashboard.md`](plans/02-trips-dashboard.md) | Trips + Dashboard | Trip CRUD API, dashboard page, image upload |
-| [`plans/03-entry-api.md`](plans/03-entry-api.md) | Entry APIs | CRUD for flights, lodging, car rentals, restaurants, activities |
-| [`plans/04-entry-panel.md`](plans/04-entry-panel.md) | Entry Panel | Trip detail layout, entry forms, entry display components |
-| [`plans/05-map.md`](plans/05-map.md) | Map | Leaflet map, pins, auto-zoom, geocoding |
-| [`plans/06-sharing.md`](plans/06-sharing.md) | Sharing | Share codes, join flow, member management |
-
----
-
 ## Integration Points & Shared Contracts
 
 ### Shared Types (`src/types/index.ts`)

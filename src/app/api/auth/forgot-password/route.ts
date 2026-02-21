@@ -12,8 +12,9 @@ export async function POST(request: Request) {
 
     if (user) {
       // MVP: log the reset link to the console instead of sending an email
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://grouptravel.cbesmer.com';
       console.log(
-        `Password reset link for ${email}: http://localhost:3000/reset?token=mock-token-${user.id}`
+        `Password reset link for ${email}: ${baseUrl}/reset?token=mock-token-${user.id}`
       );
     }
 

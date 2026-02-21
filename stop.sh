@@ -5,7 +5,29 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PID_FILE="$DIR/.pids"
+TUNNEL_PID_FILE="$DIR/.tunnel.pid"
 CONTAINER="travelplanner-db"
+
+# ── Cloudflare Tunnel ─────────────────────────────────────────────────────────
+if [[ -f "$TUNNEL_PID_FILE" ]]; then
+  TUNNEL_PID="$(cat "$TUNNEL_PID_FILE")"
+  if kill -0 "$TUNNEL_PID" 2>/dev/null; then
+    echo "==> Stopping Cloudflare tunnel (PID $TUNNEL_PID)..."
+    kill "$TUNNEL_PID"
+    # Wait up to 3 s for it to exit cleanly
+    for i in $(seq 1 3); do
+      kill -0 "$TUNNEL_PID" 2>/dev/null || break
+      sleep 1
+    done
+    # Force-kill if still alive
+    kill -0 "$TUNNEL_PID" 2>/dev/null && kill -9 "$TUNNEL_PID" 2>/dev/null || true
+  else
+    echo "==> Cloudflare tunnel process not found (may have already exited)."
+  fi
+  rm -f "$TUNNEL_PID_FILE"
+else
+  echo "==> Cloudflare tunnel not running."
+fi
 
 # ── Next.js dev server ────────────────────────────────────────────────────────
 if [[ -f "$PID_FILE" ]]; then
