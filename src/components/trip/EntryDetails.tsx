@@ -79,7 +79,7 @@ export function CardBody({ type, entry }: { type: EntryType; entry: Flight | Lod
           <Row label="Date" value={formatDate(r.date)} />
           <Row label="Time" value={r.time} />
           <Row label="Cuisine" value={r.cuisine} />
-          <Row label="Price" value={r.priceRange} />
+          <Row label="Price Range" value={r.priceRange} />
           <Row label="Reservation" value={r.reservationId} />
           <Row label="Cost" value={formatCost(r.cost)} />
         </>
