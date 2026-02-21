@@ -115,12 +115,12 @@ export function FlightForm({ tripId, onClose, existingFlight }: Props) {
         <Input label="Flight number" {...register('flightNumber')} />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Departure city" error={errors.departureCity?.message} {...register('departureCity')} />
-        <Input label="Arrival city" error={errors.arrivalCity?.message} {...register('arrivalCity')} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
         <Input label="Departure airport" placeholder="JFK" {...register('departureAirport')} />
         <Input label="Arrival airport" placeholder="CDG" {...register('arrivalAirport')} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Input label="Departure city" error={errors.departureCity?.message} {...register('departureCity')} />
+        <Input label="Arrival city" error={errors.arrivalCity?.message} {...register('arrivalCity')} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Input label="Departure date & time" type="datetime-local" error={errors.departureDate?.message} {...register('departureDate')} />

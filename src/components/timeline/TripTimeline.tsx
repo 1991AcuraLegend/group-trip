@@ -8,6 +8,7 @@ import { useEntryColors } from '@/hooks/useEntryColors';
 import {
   normalizeEntries,
   assignColumns,
+  assignDayColumns,
   getTimelineRange,
   getDayMarkers,
   getHourLabels,
@@ -140,6 +141,7 @@ export function TripTimeline({ tripId }: Props) {
                 weekday: 'short',
                 month: 'short',
                 day: 'numeric',
+                timeZone: 'UTC',
               });
 
               // Filter items that overlap with this day
@@ -192,19 +194,27 @@ export function TripTimeline({ tripId }: Props) {
                               onClick={handleBarClick}
                             />
                           ))}
-                        {/* Then render timed items */}
-                        {itemsForDay
-                          .filter((item) => !item.isAllDay)
-                          .map((item) => (
-                            <TimelineBar
-                              key={item.id}
-                              item={item}
-                              dayStart={day}
-                              color={entryColors[item.type]}
-                              isColumnLayout={true}
-                              onClick={handleBarClick}
-                            />
-                          ))}
+                        {/* Then render timed items with per-day collision layout */}
+                        {(() => {
+                          const dayColMap = assignDayColumns(itemsForDay, day);
+                          return itemsForDay
+                            .filter((item) => !item.isAllDay)
+                            .map((item) => {
+                              const colInfo = dayColMap.get(item.id) ?? { column: 0, totalColumns: 1 };
+                              return (
+                                <TimelineBar
+                                  key={item.id}
+                                  item={item}
+                                  dayStart={day}
+                                  color={entryColors[item.type]}
+                                  isColumnLayout={true}
+                                  columnIndex={colInfo.column}
+                                  totalColumnsInGroup={colInfo.totalColumns}
+                                  onClick={handleBarClick}
+                                />
+                              );
+                            });
+                        })()}
                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-full text-sand-300">

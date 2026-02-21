@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import type { Trip } from '@prisma/client';
 import { Button } from '@/components/ui/Button';
 import { ShareModal } from '@/components/sharing/ShareModal';
+import { EditTripModal } from '@/components/trip/EditTripModal';
 import { useDeleteTrip } from '@/hooks/useTrips';
 
 type Props = {
@@ -18,7 +19,7 @@ type Props = {
 function formatDateRange(start?: Date | string | null, end?: Date | string | null) {
   if (!start && !end) return null;
   const fmt = (d: Date | string) =>
-    new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
   if (start && end) return `${fmt(start)} – ${fmt(end)}`;
   if (start) return `From ${fmt(start)}`;
   return `Until ${fmt(end!)}`;
@@ -29,6 +30,7 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
   const { data: session } = useSession();
   const deleteTrip = useDeleteTrip();
   const [shareOpen, setShareOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const isOwner = session?.user?.id === trip.ownerId;
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
@@ -53,6 +55,11 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
         </Link>
 
         <div className="flex items-center gap-2 shrink-0 sm:order-last">
+          {isOwner && (
+            <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
+              Edit Trip
+            </Button>
+          )}
           <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
             Share
           </Button>
@@ -94,6 +101,13 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
           onClose={() => setShareOpen(false)}
           currentUserId={session.user.id}
           isOwner={isOwner}
+        />
+      )}
+      {isOwner && (
+        <EditTripModal
+          trip={trip}
+          isOpen={editOpen}
+          onClose={() => setEditOpen(false)}
         />
       )}
     </header>

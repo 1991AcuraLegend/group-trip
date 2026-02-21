@@ -65,7 +65,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
       startTime,
       endTime,
       isPointEvent: false,
-      isAllDay: true,
+      isAllDay: false,
       column: 0,
       totalColumns: 1,
       originalEntry: f,
@@ -310,6 +310,77 @@ export function getItemHeightInDay(item: TimelineItem, dayStart: Date): number {
 
   const durationHours = (itemEnd.getTime() - itemStart.getTime()) / 3600000;
   return Math.max(durationHours * PIXELS_PER_HOUR, 24);
+}
+
+// Assign per-day columns for timed items within a specific day.
+// Returns a Map from item.id to { column, totalColumns }.
+export function assignDayColumns(
+  items: TimelineItem[],
+  dayStart: Date,
+): Map<string, { column: number; totalColumns: number }> {
+  const result = new Map<string, { column: number; totalColumns: number }>();
+
+  const dayMidnight = new Date(dayStart);
+  dayMidnight.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayMidnight);
+  dayEnd.setHours(23, 59, 59, 999);
+
+  // Only timed items (not all-day) that are visible on this day
+  const timedItems = items.filter(
+    (item) => !item.isAllDay && item.startTime <= dayEnd && item.endTime > dayMidnight,
+  );
+
+  if (timedItems.length === 0) return result;
+
+  // Clip times to this day for overlap detection
+  const clipped = timedItems.map((item) => ({
+    id: item.id,
+    start: Math.max(item.startTime.getTime(), dayMidnight.getTime()),
+    end: Math.min(item.endTime.getTime(), dayEnd.getTime()),
+  }));
+
+  // Sort by start time, then longer duration first
+  clipped.sort((a, b) => {
+    const dt = a.start - b.start;
+    if (dt !== 0) return dt;
+    return (b.end - b.start) - (a.end - a.start);
+  });
+
+  // Greedy column assignment
+  const columnEndTimes: number[] = [];
+  const colFor = new Map<string, number>();
+
+  for (const item of clipped) {
+    let col = -1;
+    for (let c = 0; c < columnEndTimes.length; c++) {
+      if (columnEndTimes[c] <= item.start) {
+        col = c;
+        break;
+      }
+    }
+    if (col === -1) {
+      col = columnEndTimes.length;
+      columnEndTimes.push(0);
+    }
+    columnEndTimes[col] = item.end;
+    colFor.set(item.id, col);
+  }
+
+  // For each item, totalColumns = max column of all overlapping items + 1
+  for (const item of clipped) {
+    const itemCol = colFor.get(item.id)!;
+    let maxCol = itemCol;
+    for (const other of clipped) {
+      if (other.id === item.id) continue;
+      if (other.start < item.end && other.end > item.start) {
+        const otherCol = colFor.get(other.id)!;
+        if (otherCol > maxCol) maxCol = otherCol;
+      }
+    }
+    result.set(item.id, { column: itemCol, totalColumns: maxCol + 1 });
+  }
+
+  return result;
 }
 
 // Check if an item overlaps with a specific day.
