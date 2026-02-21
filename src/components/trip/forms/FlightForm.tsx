@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { useCreateEntry, useUpdateEntry } from '@/hooks/useEntries';
 import type { Flight } from '@prisma/client';
 import { toDatetimeLocal, toISO } from './shared';
+import { getCityFromAirportCode } from '@/lib/airports';
 
 const schema = z.object({
   airline: z.string().min(1, 'Airline is required'),
@@ -30,7 +32,7 @@ export function FlightForm({ tripId, onClose, existingFlight }: Props) {
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: existingFlight
       ? {
@@ -48,6 +50,37 @@ export function FlightForm({ tripId, onClose, existingFlight }: Props) {
         }
       : undefined,
   });
+
+  const departureAirport = watch('departureAirport');
+  const arrivalAirport = watch('arrivalAirport');
+  const lastAutoDepartureCity = useRef<string | null>(null);
+  const lastAutoArrivalCity = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (departureAirport) {
+      const city = getCityFromAirportCode(departureAirport);
+      if (city) {
+        const current = watch('departureCity');
+        if (!current || current === lastAutoDepartureCity.current) {
+          setValue('departureCity', city, { shouldValidate: true });
+          lastAutoDepartureCity.current = city;
+        }
+      }
+    }
+  }, [departureAirport, setValue, watch]);
+
+  useEffect(() => {
+    if (arrivalAirport) {
+      const city = getCityFromAirportCode(arrivalAirport);
+      if (city) {
+        const current = watch('arrivalCity');
+        if (!current || current === lastAutoArrivalCity.current) {
+          setValue('arrivalCity', city, { shouldValidate: true });
+          lastAutoArrivalCity.current = city;
+        }
+      }
+    }
+  }, [arrivalAirport, setValue, watch]);
 
   async function onSubmit(data: FormValues) {
     const payload = {
