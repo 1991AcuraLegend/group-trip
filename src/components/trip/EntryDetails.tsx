@@ -13,7 +13,7 @@ export function formatDatetime(d: Date | string) {
 }
 
 export function formatCost(cost: number | null | undefined) {
-  if (cost == null) return null;
+  if (cost == null || cost === 0) return null;
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cost);
 }
 
