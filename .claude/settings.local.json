@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(keybindings-help)",
+      "Bash(claude doctor)",
+      "Bash(claude /doctor:*)",
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(mdfind:*)",
+      "Bash(brew --version:*)",
+      "Bash(npx tsc:*)",
+      "Bash(timeout 15 npx next dev:*)",
+      "Bash(npx prisma validate:*)",
+      "Bash(ls:*)",
+      "Bash(npx next build:*)"
+    ]
+  }
+}

@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================
+   CSS CUSTOM PROPERTIES — COASTAL (default)
+   ============================================= */
+:root,
+[data-theme="coastal"] {
+  /* Ocean */
+  --color-ocean-50:  239 248 255;
+  --color-ocean-100: 219 238 254;
+  --color-ocean-200: 191 221 254;
+  --color-ocean-300: 147 200 252;
+  --color-ocean-400: 96 168 248;
+  --color-ocean-500: 59 140 240;
+  --color-ocean-600: 31 111 219;
+  --color-ocean-700: 26 91 192;
+  --color-ocean-800: 28 77 156;
+  --color-ocean-900: 29 63 122;
+
+  /* Sand */
+  --color-sand-50:  253 250 245;
+  --color-sand-100: 250 243 232;
+  --color-sand-200: 243 229 204;
+  --color-sand-300: 232 209 168;
+  --color-sand-400: 212 181 124;
+  --color-sand-500: 193 154 86;
+  --color-sand-600: 166 125 61;
+  --color-sand-700: 138 99 48;
+  --color-sand-800: 111 78 40;
+  --color-sand-900: 90 62 32;
+
+  /* Coral */
+  --color-coral-50:  255 245 242;
+  --color-coral-400: 251 143 118;
+  --color-coral-500: 249 115 86;
+  --color-coral-600: 232 90 58;
+  --color-coral-700: 212 69 34;
+
+  /* Seafoam */
+  --color-seafoam-50:  237 252 248;
+  --color-seafoam-300: 126 232 214;
+  --color-seafoam-400: 76 214 192;
+  --color-seafoam-500: 43 184 162;
+  --color-seafoam-800: 26 110 99;
+
+  /* Effect vars — no-op in Coastal */
+  --glass-bg:     transparent;
+  --glass-border: rgb(243 229 204);
+  --glass-blur:   0px;
+  --glass-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --glow-primary: none;
+  --glow-accent:  none;
+  --page-bg-gradient: none;
+  --selection-bg: rgb(191 221 254);
+  --selection-fg: rgb(29 63 122);
+}
+
+/* =============================================
+   CSS CUSTOM PROPERTIES — Y2K AERO
+   ============================================= */
+[data-theme="y2k"] {
+  /* Ocean → cyan-aqua blues */
+  --color-ocean-50:  230 251 255;
+  --color-ocean-100: 179 240 255;
+  --color-ocean-200: 128 229 255;
+  --color-ocean-300: 77 217 255;
+  --color-ocean-400: 26 200 255;
+  --color-ocean-500: 0 168 232;
+  --color-ocean-600: 0 144 204;
+  --color-ocean-700: 0 120 173;
+  --color-ocean-800: 0 95 138;
+  --color-ocean-900: 0 68 102;
+
+  /* Sand → cool silver-blue neutrals */
+  --color-sand-50:  240 244 248;
+  --color-sand-100: 225 232 239;
+  --color-sand-200: 200 211 222;
+  --color-sand-300: 173 185 198;
+  --color-sand-400: 142 155 170;
+  --color-sand-500: 107 122 141;
+  --color-sand-600: 85 98 116;
+  --color-sand-700: 61 77 95;
+  --color-sand-800: 42 55 72;
+  --color-sand-900: 26 37 53;
+
+  /* Coral → hot pink */
+  --color-coral-50:  255 240 247;
+  --color-coral-400: 255 110 180;
+  --color-coral-500: 255 69 160;
+  --color-coral-600: 230 53 144;
+  --color-coral-700: 204 32 128;
+
+  /* Seafoam → bright mint */
+  --color-seafoam-50:  230 255 247;
+  --color-seafoam-300: 102 240 194;
+  --color-seafoam-400: 51 230 173;
+  --color-seafoam-500: 0 212 170;
+  --color-seafoam-800: 10 122 98;
+
+  /* Effect vars — active in Y2K */
+  --glass-bg:     rgba(255 255 255 / 0.15);
+  --glass-border: rgba(255 255 255 / 0.35);
+  --glass-blur:   12px;
+  --glass-shadow: 0 4px 24px rgb(0 168 232 / 0.18);
+  --glow-primary: 0 0 16px rgb(0 168 232 / 0.6), 0 0 32px rgb(0 168 232 / 0.3);
+  --glow-accent:  0 0 16px rgb(255 69 160 / 0.6), 0 0 32px rgb(255 69 160 / 0.3);
+  --page-bg-gradient: linear-gradient(135deg, #e6fbff 0%, #f0f4f8 40%, #fff0f7 100%);
+  --selection-bg: rgb(128 229 255);
+  --selection-fg: rgb(0 68 102);
+}
+
+/* =============================================
+   BASE STYLES
+   ============================================= */
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-fg);
+}
+
+/* Y2K page background gradient */
+[data-theme="y2k"] body {
+  background-image: var(--page-bg-gradient);
+  background-attachment: fixed;
+}
+
+/* Y2K input / select glass treatment */
+[data-theme="y2k"] input,
+[data-theme="y2k"] select,
+[data-theme="y2k"] textarea {
+  background: rgba(255 255 255 / 0.6) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-color: rgba(255 255 255 / 0.5) !important;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out both;
+}
+
+/* =============================================
+   GLASS UTILITY
+   ============================================= */
+/* No-op in Coastal — .glass adds nothing extra */
+.glass {}
+
+[data-theme="y2k"] .glass {
+  background: var(--glass-bg) !important;
+  border-color: var(--glass-border) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* =============================================
+   BUTTON GLOW (Y2K only)
+   ============================================= */
+[data-theme="y2k"] .btn-glow {
+  box-shadow: var(--glow-primary);
+}
+
+[data-theme="y2k"] .btn-glow:hover {
+  box-shadow: var(--glow-primary), 0 0 48px rgb(0 168 232 / 0.2);
+}
+
+[data-theme="y2k"] .btn-glow-accent {
+  box-shadow: var(--glow-accent);
+}
+
+[data-theme="y2k"] .btn-glow-accent:hover {
+  box-shadow: var(--glow-accent), 0 0 48px rgb(255 69 160 / 0.2);
+}
+
+/* =============================================
+   LEAFLET CUSTOM STYLES
+   ============================================= */
+/* Custom marker reset */
+.custom-marker {
+  background: none !important;
+  border: none !important;
+}
+
+/* Leaflet popup styling */
+.leaflet-popup-content-wrapper {
+  background: rgb(var(--color-sand-100));
+  border: 1px solid rgb(var(--color-sand-200));
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgb(var(--color-ocean-900) / 0.15);
+}
+
+.leaflet-popup-tip {
+  background: rgb(var(--color-sand-100));
+}
+
+.leaflet-popup-content {
+  color: rgb(var(--color-sand-700));
+}

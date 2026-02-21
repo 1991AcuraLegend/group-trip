@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  ownedTrips   Trip[]       @relation("TripOwner")
+  memberships  TripMember[]
+  flights      Flight[]
+  lodgings     Lodging[]
+  carRentals   CarRental[]
+  restaurants  Restaurant[]
+  activities   Activity[]
+}
+
+model Trip {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  coverImage  String?
+  startDate   DateTime?
+  endDate     DateTime?
+  shareCode   String?      @unique
+  ownerId     String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  owner       User         @relation("TripOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     TripMember[]
+  flights     Flight[]
+  lodgings    Lodging[]
+  carRentals  CarRental[]
+  restaurants Restaurant[]
+  activities  Activity[]
+}
+
+enum MemberRole {
+  OWNER
+  COLLABORATOR
+}
+
+model TripMember {
+  id       String     @id @default(cuid())
+  userId   String
+  tripId   String
+  role     MemberRole @default(COLLABORATOR)
+  joinedAt DateTime   @default(now())
+
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip     Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tripId])
+}
+
+model Flight {
+  id               String   @id @default(cuid())
+  tripId           String
+  airline          String
+  flightNumber     String?
+  departureDate    DateTime
+  arrivalDate      DateTime
+  departureCity    String
+  arrivalCity      String
+  departureAirport String?
+  arrivalAirport   String?
+  confirmationNum  String?
+  notes            String?
+  cost             Float?
+  createdById      String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+}
+
+model Lodging {
+  id              String   @id @default(cuid())
+  tripId          String
+  name            String
+  address         String
+  checkIn         DateTime
+  checkOut        DateTime
+  lat             Float?
+  lng             Float?
+  confirmationNum String?
+  notes           String?
+  cost            Float?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+}
+
+model CarRental {
+  id              String   @id @default(cuid())
+  tripId          String
+  company         String
+  pickupAddress   String
+  dropoffAddress  String?
+  pickupDate      DateTime
+  dropoffDate     DateTime
+  pickupLat       Float?
+  pickupLng       Float?
+  confirmationNum String?
+  notes           String?
+  cost            Float?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+}
+
+model Restaurant {
+  id            String   @id @default(cuid())
+  tripId        String
+  name          String
+  address       String
+  date          DateTime
+  time          String?
+  lat           Float?
+  lng           Float?
+  cuisine       String?
+  priceRange    String?
+  reservationId String?
+  notes         String?
+  cost          Float?
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  tripId      String
+  name        String
+  address     String?
+  date        DateTime
+  startTime   String?
+  endTime     String?
+  lat         Float?
+  lng         Float?
+  category    String?
+  cost        Float?
+  notes       String?
+  bookingRef  String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id])
+}
