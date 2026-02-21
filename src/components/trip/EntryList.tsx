@@ -13,9 +13,11 @@ type Props = {
   type: EntryType;
   tripId: string;
   onEdit: (entry: Entry) => void;
+  selectedEntryId: string | null;
+  onSelectEntry: (entryId: string | null) => void;
 };
 
-export function EntryList({ entries, type, tripId, onEdit }: Props) {
+export function EntryList({ entries, type, tripId, onEdit, selectedEntryId, onSelectEntry }: Props) {
   if (entries.length === 0) {
     return (
       <div className="py-10 text-center text-sm text-sand-400">
@@ -37,6 +39,8 @@ export function EntryList({ entries, type, tripId, onEdit }: Props) {
           type={type}
           tripId={tripId}
           onEdit={onEdit}
+          isSelected={selectedEntryId === entry.id}
+          onSelect={() => onSelectEntry(entry.id === selectedEntryId ? null : entry.id)}
         />
       ))}
     </div>

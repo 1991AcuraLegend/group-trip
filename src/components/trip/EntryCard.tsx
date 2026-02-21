@@ -13,9 +13,11 @@ type Props = {
   type: EntryType;
   tripId: string;
   onEdit: (entry: Flight | Lodging | CarRental | Restaurant | Activity) => void;
+  isSelected?: boolean;
+  onSelect?: () => void;
 };
 
-export function EntryCard({ entry, type, tripId, onEdit }: Props) {
+export function EntryCard({ entry, type, tripId, onEdit, isSelected, onSelect }: Props) {
   const deleteEntry = useDeleteEntry(tripId);
   const [showNotes, setShowNotes] = useState(false);
   const notes = (entry as { notes?: string | null }).notes;
@@ -29,7 +31,10 @@ export function EntryCard({ entry, type, tripId, onEdit }: Props) {
 
   return (
     <div
-      className="glass rounded-lg bg-white border border-sand-200 shadow-sm overflow-hidden"
+      onClick={onSelect}
+      className={`glass rounded-lg bg-white border border-sand-200 shadow-sm overflow-hidden cursor-pointer transition-all ${
+        isSelected ? 'ring-2 ring-ocean-400 ring-offset-2 shadow-md' : 'hover:shadow-md'
+      }`}
       style={{ borderLeftWidth: 4, borderLeftColor: color }}
     >
       <div className="p-2.5 sm:p-3 flex gap-2 sm:gap-3">

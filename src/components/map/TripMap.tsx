@@ -16,9 +16,18 @@ const MapContent = dynamic(() => import('./MapContent'), {
 type Props = {
   entries: MappableEntry[];
   onPinClick?: (entry: MappableEntry) => void;
+  onSelectEntry?: (entryId: string) => void;
   visible?: boolean;
+  selectedEntryId?: string | null;
 };
 
-export default function TripMap({ entries, onPinClick, visible }: Props) {
-  return <MapContent entries={entries} onPinClick={onPinClick} visible={visible} />;
+export default function TripMap({ entries, onPinClick, onSelectEntry, visible, selectedEntryId }: Props) {
+  const handlePinClick = (entry: MappableEntry) => {
+    if (onSelectEntry) {
+      onSelectEntry(entry.id);
+    }
+    onPinClick?.(entry);
+  };
+
+  return <MapContent entries={entries} onPinClick={handlePinClick} visible={visible} selectedEntryId={selectedEntryId} />;
 }

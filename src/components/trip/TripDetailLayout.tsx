@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTrip } from '@/hooks/useTrips';
 import { useEntries } from '@/hooks/useEntries';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { entriesToMappable } from '@/lib/entry-helpers';
 import { TripHeader } from './TripHeader';
 import { EntryPanel } from './EntryPanel';
@@ -14,7 +15,9 @@ type Props = { tripId: string };
 export function TripDetailLayout({ tripId }: Props) {
   const { data: trip, isLoading: tripLoading, error: tripError } = useTrip(tripId);
   const { data: entries } = useEntries(tripId);
+  const isMobile = useIsMobile();
   const [mobileView, setMobileView] = useState<'map' | 'planner'>('map');
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
   if (tripLoading) {
     return (
@@ -47,12 +50,23 @@ export function TripDetailLayout({ tripId }: Props) {
       <div className="flex flex-1 overflow-hidden flex-col lg:flex-row pb-14 lg:pb-0">
         {/* Entry panel — hidden on mobile when map is active, full-width when planner is active, 540px fixed on desktop */}
         <div className={`${mobileView === 'planner' ? 'flex' : 'hidden'} lg:flex flex-1 w-full overflow-hidden lg:w-[540px] lg:flex-none border-b lg:border-b-0 lg:border-r border-sand-200`}>
-          <EntryPanel tripId={tripId} />
+          <EntryPanel
+            tripId={tripId}
+            selectedEntryId={selectedEntryId}
+            onSelectEntry={(entryId) => {
+              setSelectedEntryId(entryId);
+              // On mobile: switch to map view when entry is selected
+              // On desktop: keep the current view, just highlight the entry
+              if (isMobile) {
+                setMobileView('map');
+              }
+            }}
+          />
         </div>
 
         {/* Map — full-screen on mobile when map is active, hidden when planner is active, fills right on desktop */}
         <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} lg:flex flex-1 relative w-full lg:flex-1`}>
-          <TripMap entries={mappableEntries} visible={mobileView === 'map'} />
+          <TripMap entries={mappableEntries} visible={mobileView === 'map'} selectedEntryId={selectedEntryId} onSelectEntry={setSelectedEntryId} />
         </div>
       </div>
 

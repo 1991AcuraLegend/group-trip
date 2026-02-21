@@ -17,11 +17,11 @@ import { ENTRY_LABELS } from '@/lib/constants';
 
 type AnyEntry = Flight | Lodging | CarRental | Restaurant | Activity;
 
-type Props = { tripId: string };
+type Props = { tripId: string; selectedEntryId: string | null; onSelectEntry: (entryId: string | null) => void };
 
 const TAB_ORDER: EntryType[] = ['flight', 'lodging', 'carRental', 'restaurant', 'activity'];
 
-export function EntryPanel({ tripId }: Props) {
+export function EntryPanel({ tripId, selectedEntryId, onSelectEntry }: Props) {
   const { data: entries, isLoading, error } = useEntries(tripId);
   const [activeTab, setActiveTab] = useState<EntryType>('flight');
   const [createOpen, setCreateOpen] = useState(false);
@@ -115,6 +115,8 @@ export function EntryPanel({ tripId }: Props) {
             type={activeTab}
             tripId={tripId}
             onEdit={(entry) => handleEdit(activeTab, entry)}
+            selectedEntryId={selectedEntryId}
+            onSelectEntry={onSelectEntry}
           />
         )}
       </div>

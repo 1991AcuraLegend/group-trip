@@ -7,17 +7,20 @@ import { useEffect } from 'react';
 import type { MappableEntry } from '@/types';
 import { useEntryColors } from '@/hooks/useEntryColors';
 
-function createColoredIcon(color: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
-    <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="${color}"/>
+function createColoredIcon(color: string, isSelected: boolean = false) {
+  const size = isSelected ? 32 : 24;
+  const height = isSelected ? 48 : 36;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="${size}" height="${height}">
+    ${isSelected ? '<filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' : ''}
+    <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="${color}" ${isSelected ? 'filter="url(#glow)" opacity="1"' : ''} stroke="${isSelected ? 'white' : 'none'}" stroke-width="${isSelected ? '2' : '0'}"/>
     <circle cx="12" cy="12" r="5" fill="white"/>
   </svg>`;
   return L.divIcon({
     html: svg,
-    className: 'custom-marker',
-    iconSize: [24, 36],
-    iconAnchor: [12, 36],
-    popupAnchor: [0, -36],
+    className: isSelected ? 'custom-marker-selected' : 'custom-marker',
+    iconSize: [size, height],
+    iconAnchor: [size / 2, height],
+    popupAnchor: [0, -height],
   });
 }
 
@@ -47,10 +50,12 @@ type Props = {
   entries: MappableEntry[];
   onPinClick?: (entry: MappableEntry) => void;
   visible?: boolean;
+  selectedEntryId?: string | null;
 };
 
-export default function MapContent({ entries, onPinClick, visible }: Props) {
+export default function MapContent({ entries, onPinClick, visible, selectedEntryId }: Props) {
   const entryColors = useEntryColors();
+
   return (
     <MapContainer
       center={[20, 0]}
@@ -67,7 +72,7 @@ export default function MapContent({ entries, onPinClick, visible }: Props) {
         <Marker
           key={entry.id}
           position={[entry.lat, entry.lng]}
-          icon={createColoredIcon(entryColors[entry.type])}
+          icon={createColoredIcon(entryColors[entry.type], selectedEntryId === entry.id)}
           eventHandlers={{ click: () => onPinClick?.(entry) }}
         >
           <Popup>
