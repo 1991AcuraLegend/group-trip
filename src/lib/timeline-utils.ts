@@ -37,9 +37,9 @@ function parseTimeString(time: string): { hours: number; minutes: number } | nul
 // Build a Date combining a base date (date-only) with an optional time string.
 // Falls back to the specified fallbackHour if time is missing or unparseable.
 function combineDateAndTime(baseDate: Date, timeStr: string | null | undefined, fallbackHour: number): Date {
-  const d = new Date(baseDate);
-  // Reset to midnight first (baseDate may carry a time from the DB)
-  d.setHours(0, 0, 0, 0);
+  // Dates are stored as UTC midnight in the DB. Use UTC components to build the
+  // correct local date so timezones behind UTC don't shift the date back by one day.
+  const d = new Date(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate(), 0, 0, 0, 0);
   if (timeStr) {
     const parsed = parseTimeString(timeStr);
     if (parsed) {

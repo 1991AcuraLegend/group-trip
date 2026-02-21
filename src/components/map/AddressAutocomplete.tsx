@@ -17,21 +17,23 @@ type Props = {
 export function AddressAutocomplete({ label, value, onChange, onSelect, error, placeholder = 'Search address or place name...' }: Props) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [userHasTyped, setUserHasTyped] = useState(false);
   const { results, isLoading } = useGeocoding(value);
   const listRef = useRef<HTMLUListElement>(null);
 
-  // Open dropdown when results arrive
+  // Only open dropdown when results arrive if the user has typed in this session
   useEffect(() => {
-    if (results.length > 0) {
+    if (results.length > 0 && userHasTyped) {
       setOpen(true);
       setActiveIndex(-1);
     }
-  }, [results]);
+  }, [results, userHasTyped]);
 
   function handleSelect(result: GeocodingResult) {
     onChange(result.displayName);
     onSelect(result);
     setOpen(false);
+    setUserHasTyped(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -53,7 +55,10 @@ export function AddressAutocomplete({ label, value, onChange, onSelect, error, p
 
   function handleBlur() {
     // Delay so click on dropdown item fires first
-    setTimeout(() => setOpen(false), 150);
+    setTimeout(() => {
+      setOpen(false);
+      setUserHasTyped(false);
+    }, 150);
   }
 
   const inputId = label.toLowerCase().replace(/\s+/g, '-');
@@ -68,9 +73,9 @@ export function AddressAutocomplete({ label, value, onChange, onSelect, error, p
           id={inputId}
           type="text"
           value={value}
-          onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+          onChange={(e) => { onChange(e.target.value); setUserHasTyped(true); }}
           onKeyDown={handleKeyDown}
-          onFocus={() => results.length > 0 && setOpen(true)}
+          onFocus={() => {}}
           onBlur={handleBlur}
           placeholder={placeholder}
           autoComplete="off"

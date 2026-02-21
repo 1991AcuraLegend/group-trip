@@ -32,7 +32,7 @@ export function EntryCard({ entry, type, tripId, onEdit }: Props) {
       className="glass rounded-lg bg-white border border-sand-200 shadow-sm overflow-hidden"
       style={{ borderLeftWidth: 4, borderLeftColor: color }}
     >
-      <div className="p-3 flex gap-3">
+      <div className="p-2.5 sm:p-3 flex gap-2 sm:gap-3">
         <div className="flex-1 flex flex-col gap-1 min-w-0">
           <CardBody type={type} entry={entry} />
           {notes && (

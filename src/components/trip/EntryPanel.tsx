@@ -17,11 +17,11 @@ import { ENTRY_LABELS } from '@/lib/constants';
 
 type AnyEntry = Flight | Lodging | CarRental | Restaurant | Activity;
 
-type Props = { tripId: string; onShowMap?: () => void };
+type Props = { tripId: string };
 
 const TAB_ORDER: EntryType[] = ['flight', 'lodging', 'carRental', 'restaurant', 'activity'];
 
-export function EntryPanel({ tripId, onShowMap }: Props) {
+export function EntryPanel({ tripId }: Props) {
   const { data: entries, isLoading, error } = useEntries(tripId);
   const [activeTab, setActiveTab] = useState<EntryType>('flight');
   const [createOpen, setCreateOpen] = useState(false);
@@ -85,22 +85,18 @@ export function EntryPanel({ tripId, onShowMap }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
-      <div className="flex items-end justify-between border-b border-sand-200 px-4 pt-2">
-        <Tabs tabs={tabs} activeTab={activeTab} onChange={(v) => setActiveTab(v as EntryType)} />
-        {onShowMap && (
-          <div className="lg:hidden pb-2 pl-2">
-            <Button variant="secondary" size="sm" onClick={onShowMap}>
-              Map
-            </Button>
-          </div>
-        )}
+    <div className="flex h-full w-full min-w-0 flex-col bg-white">
+      <div className="flex items-stretch">
+        <div className="flex-1 min-w-0">
+          <Tabs tabs={tabs} activeTab={activeTab} onChange={(v) => setActiveTab(v as EntryType)} />
+        </div>
       </div>
 
       <div className="flex items-center justify-between px-4 py-3 border-b border-sand-200">
         <span className="text-sm font-medium text-sand-700">{ENTRY_LABELS[activeTab]}</span>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          + Add {ENTRY_LABELS[activeTab]}
+        <Button size="sm" onClick={() => setCreateOpen(true)} className="whitespace-nowrap">
+          <span className="hidden sm:inline">+ Add {ENTRY_LABELS[activeTab]}</span>
+          <span className="sm:hidden">+ Add</span>
         </Button>
       </div>
 

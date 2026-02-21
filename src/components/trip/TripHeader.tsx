@@ -40,18 +40,36 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
   }
 
   return (
-    <header className="glass flex items-center gap-4 border-b border-sand-200 bg-white px-4 py-3 md:px-6">
-      <Link
-        href="/dashboard"
-        className="flex items-center gap-1 text-sm text-sand-500 hover:text-ocean-600 transition-colors shrink-0"
-      >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Dashboard
-      </Link>
+    <header className="glass flex flex-wrap gap-2 sm:flex-nowrap sm:items-center sm:gap-4 border-b border-sand-200 bg-white px-4 py-3 md:px-6">
+      <div className="w-full flex items-center justify-between sm:contents">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-1 text-sm text-sand-500 hover:text-ocean-600 transition-colors shrink-0"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Dashboard
+        </Link>
 
-      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 shrink-0 sm:order-last">
+          <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
+            Share
+          </Button>
+          {isOwner && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleDelete}
+              loading={deleteTrip.isPending}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="w-full sm:flex-1 sm:min-w-0">
         <h1 className="text-lg font-bold font-display text-ocean-900 truncate">{trip.name}</h1>
         <div className="flex items-center gap-3 text-xs text-sand-500">
           {dateRange && <span>{dateRange}</span>}
@@ -67,22 +85,6 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
             </Link>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 shrink-0">
-        <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
-          Share
-        </Button>
-        {isOwner && (
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleDelete}
-            loading={deleteTrip.isPending}
-          >
-            Delete
-          </Button>
-        )}
       </div>
 
       {session?.user?.id && (

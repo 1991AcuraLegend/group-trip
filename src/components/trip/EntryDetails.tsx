@@ -20,9 +20,9 @@ export function formatCost(cost: number | null | undefined) {
 export function Row({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null;
   return (
-    <div className="flex gap-2 text-sm">
-      <span className="min-w-[90px] text-sand-400">{label}</span>
-      <span className="text-sand-700">{value}</span>
+    <div className="flex gap-2 text-sm min-w-0">
+      <span className="min-w-[72px] sm:min-w-[90px] text-sand-400">{label}</span>
+      <span className="text-sand-700 truncate">{value}</span>
     </div>
   );
 }
