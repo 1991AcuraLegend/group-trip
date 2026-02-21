@@ -46,3 +46,7 @@ public/uploads/*
 # dev scripts runtime files
 .pids
 .nextjs.log
+
+# scripts
+start.sh
+stop.sh

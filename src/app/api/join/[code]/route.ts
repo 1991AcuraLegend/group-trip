@@ -1,33 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth } from '@/lib/auth-helpers';
+import { getSession } from '@/lib/auth-helpers';
 
 type Params = { params: { code: string } };
 
 export async function GET(_request: NextRequest, { params }: Params) {
-  return withAuth(async (session) => {
-    const trip = await prisma.trip.findUnique({
-      where: { shareCode: params.code },
-      include: {
-        owner: { select: { name: true } },
-        _count: { select: { members: true } },
-      },
-    });
+  const session = await getSession();
 
-    if (!trip) return NextResponse.json({ error: 'Invalid or expired share link' }, { status: 404 });
+  const trip = await prisma.trip.findUnique({
+    where: { shareCode: params.code },
+    include: {
+      owner: { select: { name: true } },
+      _count: { select: { members: true } },
+    },
+  });
 
-    const alreadyMember = await prisma.tripMember.findUnique({
+  if (!trip) return NextResponse.json({ error: 'Invalid or expired share link' }, { status: 404 });
+
+  let alreadyMember = false;
+  if (session?.user?.id) {
+    const member = await prisma.tripMember.findUnique({
       where: { userId_tripId: { userId: session.user.id, tripId: trip.id } },
     });
+    alreadyMember = !!member;
+  }
 
-    return NextResponse.json({
-      tripId: trip.id,
-      name: trip.name,
-      description: trip.description,
-      ownerName: trip.owner.name,
-      memberCount: trip._count.members,
-      alreadyMember: !!alreadyMember,
-    });
+  return NextResponse.json({
+    tripId: trip.id,
+    name: trip.name,
+    description: trip.description,
+    ownerName: trip.owner.name,
+    memberCount: trip._count.members,
+    alreadyMember,
   });
 }
 
