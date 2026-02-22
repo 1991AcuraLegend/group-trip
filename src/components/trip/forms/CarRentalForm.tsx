@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
-import { useCreateEntry, useUpdateEntry } from '@/hooks/useEntries';
+import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEntries';
 import type { CarRental } from '@prisma/client';
 import { toDatetimeLocal, toISO } from './shared';
 
@@ -24,11 +24,12 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-type Props = { tripId: string; onClose: () => void; existingCarRental?: CarRental };
+type Props = { tripId: string; onClose: () => void; existingCarRental?: CarRental; moveToPlan?: boolean };
 
-export function CarRentalForm({ tripId, onClose, existingCarRental }: Props) {
+export function CarRentalForm({ tripId, onClose, existingCarRental, moveToPlan }: Props) {
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
+  const promoteToPlan = usePromoteToPlan(tripId);
 
   const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -62,7 +63,9 @@ export function CarRentalForm({ tripId, onClose, existingCarRental }: Props) {
       cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
       notes: data.notes || undefined,
     };
-    if (existingCarRental) {
+    if (moveToPlan && existingCarRental) {
+      await promoteToPlan.mutateAsync({ entryId: existingCarRental.id, type: 'carRental', data: payload });
+    } else if (existingCarRental) {
       await updateEntry.mutateAsync({ entryId: existingCarRental.id, type: 'carRental', data: payload });
     } else {
       await createEntry.mutateAsync(payload);
@@ -70,7 +73,7 @@ export function CarRentalForm({ tripId, onClose, existingCarRental }: Props) {
     onClose();
   }
 
-  const isLoading = createEntry.isPending || updateEntry.isPending;
+  const isLoading = createEntry.isPending || updateEntry.isPending || promoteToPlan.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
@@ -122,7 +125,7 @@ export function CarRentalForm({ tripId, onClose, existingCarRental }: Props) {
       </div>
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>Cancel</Button>
-        <Button type="submit" loading={isLoading}>{existingCarRental ? 'Update' : 'Add'} car rental</Button>
+        <Button type="submit" loading={isLoading}>{moveToPlan ? 'Move to Plan' : existingCarRental ? 'Update' : 'Add'} car rental</Button>
       </div>
     </form>
   );

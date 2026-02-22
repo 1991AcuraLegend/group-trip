@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
-import { useCreateEntry, useUpdateEntry } from '@/hooks/useEntries';
+import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEntries';
 import type { Lodging } from '@prisma/client';
 import { toDatetimeLocal, toISO } from './shared';
 
@@ -23,11 +23,12 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-type Props = { tripId: string; onClose: () => void; existingLodging?: Lodging };
+type Props = { tripId: string; onClose: () => void; existingLodging?: Lodging; moveToPlan?: boolean };
 
-export function LodgingForm({ tripId, onClose, existingLodging }: Props) {
+export function LodgingForm({ tripId, onClose, existingLodging, moveToPlan }: Props) {
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
+  const promoteToPlan = usePromoteToPlan(tripId);
 
   const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -59,7 +60,9 @@ export function LodgingForm({ tripId, onClose, existingLodging }: Props) {
       cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
       notes: data.notes || undefined,
     };
-    if (existingLodging) {
+    if (moveToPlan && existingLodging) {
+      await promoteToPlan.mutateAsync({ entryId: existingLodging.id, type: 'lodging', data: payload });
+    } else if (existingLodging) {
       await updateEntry.mutateAsync({ entryId: existingLodging.id, type: 'lodging', data: payload });
     } else {
       await createEntry.mutateAsync(payload);
@@ -67,7 +70,7 @@ export function LodgingForm({ tripId, onClose, existingLodging }: Props) {
     onClose();
   }
 
-  const isLoading = createEntry.isPending || updateEntry.isPending;
+  const isLoading = createEntry.isPending || updateEntry.isPending || promoteToPlan.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
@@ -106,7 +109,7 @@ export function LodgingForm({ tripId, onClose, existingLodging }: Props) {
       </div>
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>Cancel</Button>
-        <Button type="submit" loading={isLoading}>{existingLodging ? 'Update' : 'Add'} lodging</Button>
+        <Button type="submit" loading={isLoading}>{moveToPlan ? 'Move to Plan' : existingLodging ? 'Update' : 'Add'} lodging</Button>
       </div>
     </form>
   );

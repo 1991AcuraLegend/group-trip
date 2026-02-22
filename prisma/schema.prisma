@@ -67,12 +67,13 @@ model TripMember {
 }
 
 model Flight {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   tripId           String
+  isIdea           Boolean   @default(false)
   airline          String
   flightNumber     String?
-  departureDate    DateTime
-  arrivalDate      DateTime
+  departureDate    DateTime?
+  arrivalDate      DateTime?
   departureCity    String
   arrivalCity      String
   departureAirport String?
@@ -81,60 +82,63 @@ model Flight {
   notes            String?
   cost             Float?
   createdById      String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   createdBy User @relation(fields: [createdById], references: [id])
 }
 
 model Lodging {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   tripId          String
+  isIdea          Boolean   @default(false)
   name            String
   address         String
-  checkIn         DateTime
-  checkOut        DateTime
+  checkIn         DateTime?
+  checkOut        DateTime?
   lat             Float?
   lng             Float?
   confirmationNum String?
   notes           String?
   cost            Float?
   createdById     String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   createdBy User @relation(fields: [createdById], references: [id])
 }
 
 model CarRental {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   tripId          String
+  isIdea          Boolean   @default(false)
   company         String
   pickupAddress   String
   dropoffAddress  String?
-  pickupDate      DateTime
-  dropoffDate     DateTime
+  pickupDate      DateTime?
+  dropoffDate     DateTime?
   pickupLat       Float?
   pickupLng       Float?
   confirmationNum String?
   notes           String?
   cost            Float?
   createdById     String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   createdBy User @relation(fields: [createdById], references: [id])
 }
 
 model Restaurant {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   tripId        String
+  isIdea        Boolean   @default(false)
   name          String
   address       String
-  date          DateTime
+  date          DateTime?
   time          String?
   lat           Float?
   lng           Float?
@@ -144,19 +148,20 @@ model Restaurant {
   notes         String?
   cost          Float?
   createdById   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   createdBy User @relation(fields: [createdById], references: [id])
 }
 
 model Activity {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   tripId      String
+  isIdea      Boolean   @default(false)
   name        String
   address     String?
-  date        DateTime
+  date        DateTime?
   startTime   String?
   endTime     String?
   lat         Float?
@@ -166,8 +171,8 @@ model Activity {
   notes       String?
   bookingRef  String?
   createdById String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   createdBy User @relation(fields: [createdById], references: [id])

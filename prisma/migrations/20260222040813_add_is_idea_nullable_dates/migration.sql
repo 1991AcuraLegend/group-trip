@@ -1,0 +1,22 @@
+-- AlterTable
+ALTER TABLE "Activity" ADD COLUMN     "isIdea" BOOLEAN NOT NULL DEFAULT false,
+ALTER COLUMN "date" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "CarRental" ADD COLUMN     "isIdea" BOOLEAN NOT NULL DEFAULT false,
+ALTER COLUMN "pickupDate" DROP NOT NULL,
+ALTER COLUMN "dropoffDate" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "Flight" ADD COLUMN     "isIdea" BOOLEAN NOT NULL DEFAULT false,
+ALTER COLUMN "departureDate" DROP NOT NULL,
+ALTER COLUMN "arrivalDate" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "Lodging" ADD COLUMN     "isIdea" BOOLEAN NOT NULL DEFAULT false,
+ALTER COLUMN "checkIn" DROP NOT NULL,
+ALTER COLUMN "checkOut" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "Restaurant" ADD COLUMN     "isIdea" BOOLEAN NOT NULL DEFAULT false,
+ALTER COLUMN "date" DROP NOT NULL;

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { useCreateEntry, useUpdateEntry } from '@/hooks/useEntries';
+import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEntries';
 import type { Flight } from '@prisma/client';
 import { toDatetimeLocal, toISO } from './shared';
 import { getCityFromAirportCode } from '@/lib/airports';
@@ -26,11 +26,12 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-type Props = { tripId: string; onClose: () => void; existingFlight?: Flight };
+type Props = { tripId: string; onClose: () => void; existingFlight?: Flight; moveToPlan?: boolean };
 
-export function FlightForm({ tripId, onClose, existingFlight }: Props) {
+export function FlightForm({ tripId, onClose, existingFlight, moveToPlan }: Props) {
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
+  const promoteToPlan = usePromoteToPlan(tripId);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -98,7 +99,9 @@ export function FlightForm({ tripId, onClose, existingFlight }: Props) {
       notes: data.notes || undefined,
     };
 
-    if (existingFlight) {
+    if (moveToPlan && existingFlight) {
+      await promoteToPlan.mutateAsync({ entryId: existingFlight.id, type: 'flight', data: payload });
+    } else if (existingFlight) {
       await updateEntry.mutateAsync({ entryId: existingFlight.id, type: 'flight', data: payload });
     } else {
       await createEntry.mutateAsync(payload);
@@ -106,7 +109,7 @@ export function FlightForm({ tripId, onClose, existingFlight }: Props) {
     onClose();
   }
 
-  const isLoading = createEntry.isPending || updateEntry.isPending;
+  const isLoading = createEntry.isPending || updateEntry.isPending || promoteToPlan.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
@@ -136,7 +139,7 @@ export function FlightForm({ tripId, onClose, existingFlight }: Props) {
       </div>
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>Cancel</Button>
-        <Button type="submit" loading={isLoading}>{existingFlight ? 'Update' : 'Add'} flight</Button>
+        <Button type="submit" loading={isLoading}>{moveToPlan ? 'Move to Plan' : existingFlight ? 'Update' : 'Add'} flight</Button>
       </div>
     </form>
   );

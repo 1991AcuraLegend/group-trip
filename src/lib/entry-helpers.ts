@@ -35,13 +35,29 @@ export function entriesToMappable(entries: {
 }
 
 // Get the primary date for any entry (for sorting/display)
-export function getEntryDate(type: EntryType, entry: Flight | Lodging | CarRental | Restaurant | Activity): Date {
+// Dates are nullable for idea entries — returns null if no date is set.
+export function getEntryDate(type: EntryType, entry: Flight | Lodging | CarRental | Restaurant | Activity): Date | null {
   switch (type) {
-    case 'flight': return new Date((entry as Flight).departureDate);
-    case 'lodging': return new Date((entry as Lodging).checkIn);
-    case 'carRental': return new Date((entry as CarRental).pickupDate);
-    case 'restaurant': return new Date((entry as Restaurant).date);
-    case 'activity': return new Date((entry as Activity).date);
+    case 'flight': {
+      const d = (entry as Flight).departureDate;
+      return d ? new Date(d) : null;
+    }
+    case 'lodging': {
+      const d = (entry as Lodging).checkIn;
+      return d ? new Date(d) : null;
+    }
+    case 'carRental': {
+      const d = (entry as CarRental).pickupDate;
+      return d ? new Date(d) : null;
+    }
+    case 'restaurant': {
+      const d = (entry as Restaurant).date;
+      return d ? new Date(d) : null;
+    }
+    case 'activity': {
+      const d = (entry as Activity).date;
+      return d ? new Date(d) : null;
+    }
   }
 }
 

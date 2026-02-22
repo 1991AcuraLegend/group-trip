@@ -27,9 +27,11 @@ export function EntryList({ entries, type, tripId, canEdit, onEdit, selectedEntr
     );
   }
 
-  const sorted = [...entries].sort(
-    (a, b) => getEntryDate(type, a).getTime() - getEntryDate(type, b).getTime()
-  );
+  const sorted = [...entries].sort((a, b) => {
+    const dateA = getEntryDate(type, a)?.getTime() ?? 0;
+    const dateB = getEntryDate(type, b)?.getTime() ?? 0;
+    return dateA - dateB;
+  });
 
   return (
     <div className="flex flex-col gap-3">

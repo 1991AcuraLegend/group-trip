@@ -22,6 +22,7 @@ import { TripHeader } from '@/components/trip/TripHeader';
 
 const COLUMN_WIDTH = 280; // px
 const COLUMN_GAP = 12; // px
+const HOUR_LABEL_WIDTH = 36; // px - width reserved for hour labels on the left
 
 type Props = {
   tripId: string;
@@ -109,18 +110,6 @@ export function TripTimeline({ tripId }: Props) {
     <div className="flex flex-col h-screen overflow-hidden">
       <TripHeader trip={trip} memberCount={memberCount} entryCount={items.length} />
 
-      {/* Secondary nav */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-sand-200 bg-white text-sm shrink-0">
-        <Link
-          href={`/trips/${tripId}`}
-          className="text-sand-500 hover:text-ocean-600 transition-colors"
-        >
-          ← Back to trip
-        </Link>
-        <span className="text-sand-300">|</span>
-        <span className="text-ocean-700 font-medium">Timeline</span>
-      </div>
-
       {!hasEntries ? (
         <div className="flex flex-col items-center justify-center flex-1 gap-2 text-sand-500">
           <p className="text-lg font-medium">No entries yet</p>
@@ -179,7 +168,7 @@ export function TripTimeline({ tripId }: Props) {
 
                     {/* Entry bars for this day */}
                     {itemsForDay.length > 0 ? (
-                      <div className="relative" style={{ height: dailyHeightPx }}>
+                      <div className="relative" style={{ height: dailyHeightPx, marginLeft: HOUR_LABEL_WIDTH }}>
                         {/* Render all-day items first */}
                         {itemsForDay
                           .filter((item) => item.isAllDay)

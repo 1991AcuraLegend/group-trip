@@ -56,6 +56,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
   const items: TimelineItem[] = [];
 
   for (const f of entries.flights) {
+    if (!f.departureDate || !f.arrivalDate) continue; // skip idea entries
     const startTime = new Date(f.departureDate);
     const endTime = new Date(f.arrivalDate);
     items.push({
@@ -73,6 +74,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
   }
 
   for (const l of entries.lodgings) {
+    if (!l.checkIn || !l.checkOut) continue; // skip idea entries
     const startTime = new Date(l.checkIn);
     const endTime = new Date(l.checkOut);
     items.push({
@@ -90,6 +92,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
   }
 
   for (const c of entries.carRentals) {
+    if (!c.pickupDate || !c.dropoffDate) continue; // skip idea entries
     const startTime = new Date(c.pickupDate);
     const endTime = new Date(c.dropoffDate);
     items.push({
@@ -107,6 +110,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
   }
 
   for (const r of entries.restaurants) {
+    if (!r.date) continue; // skip idea entries
     // date field is midnight UTC from DB; time is a string
     const isAllDay = !r.time || r.time.trim() === '';
     const startTime = combineDateAndTime(new Date(r.date), r.time, 12);
@@ -126,6 +130,7 @@ export function normalizeEntries(entries: EntriesData): TimelineItem[] {
   }
 
   for (const a of entries.activities) {
+    if (!a.date) continue; // skip idea entries
     const isAllDay = !a.startTime || a.startTime.trim() === '';
     const startTime = combineDateAndTime(new Date(a.date), a.startTime, 0);
     let endTime: Date;
@@ -232,12 +237,15 @@ export function getTimelineRange(
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
 
-  // Use trip dates as the base range
-  if (trip.startDate) rangeStart = new Date(trip.startDate);
+  // Use trip dates as the base range. Trip dates are stored as UTC midnight,
+  // so use UTC methods to normalize them to midnight in local time.
+  if (trip.startDate) {
+    const d = new Date(trip.startDate);
+    rangeStart = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0);
+  }
   if (trip.endDate) {
-    rangeEnd = new Date(trip.endDate);
-    // endDate is often midnight; push to end of that day
-    rangeEnd.setHours(23, 59, 59, 999);
+    const d = new Date(trip.endDate);
+    rangeEnd = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999);
   }
 
   // Extend range to include all entries

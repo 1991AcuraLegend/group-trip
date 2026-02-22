@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
-import { useCreateEntry, useUpdateEntry } from '@/hooks/useEntries';
+import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEntries';
 import type { Activity } from '@prisma/client';
 import { toDateInput, toISO } from './shared';
 
@@ -25,11 +25,12 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-type Props = { tripId: string; onClose: () => void; existingActivity?: Activity };
+type Props = { tripId: string; onClose: () => void; existingActivity?: Activity; moveToPlan?: boolean };
 
-export function ActivityForm({ tripId, onClose, existingActivity }: Props) {
+export function ActivityForm({ tripId, onClose, existingActivity, moveToPlan }: Props) {
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
+  const promoteToPlan = usePromoteToPlan(tripId);
 
   const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -65,7 +66,9 @@ export function ActivityForm({ tripId, onClose, existingActivity }: Props) {
       cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
       notes: data.notes || undefined,
     };
-    if (existingActivity) {
+    if (moveToPlan && existingActivity) {
+      await promoteToPlan.mutateAsync({ entryId: existingActivity.id, type: 'activity', data: payload });
+    } else if (existingActivity) {
       await updateEntry.mutateAsync({ entryId: existingActivity.id, type: 'activity', data: payload });
     } else {
       await createEntry.mutateAsync(payload);
@@ -73,7 +76,7 @@ export function ActivityForm({ tripId, onClose, existingActivity }: Props) {
     onClose();
   }
 
-  const isLoading = createEntry.isPending || updateEntry.isPending;
+  const isLoading = createEntry.isPending || updateEntry.isPending || promoteToPlan.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
@@ -113,7 +116,7 @@ export function ActivityForm({ tripId, onClose, existingActivity }: Props) {
       </div>
       <div className="flex justify-end gap-3 pt-2">
         <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>Cancel</Button>
-        <Button type="submit" loading={isLoading}>{existingActivity ? 'Update' : 'Add'} activity</Button>
+        <Button type="submit" loading={isLoading}>{moveToPlan ? 'Move to Plan' : existingActivity ? 'Update' : 'Add'} activity</Button>
       </div>
     </form>
   );

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth } from '@/lib/auth-helpers';
-import { createEntrySchema } from '@/validators/entry';
+import { createEntrySchema, createIdeaEntrySchema } from '@/validators/entry';
 import { getTripMembership } from '@/lib/trip-auth';
 
 type Params = { params: { tripId: string } };
 
-export async function GET(_request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: Params) {
   return withAuth(async (session) => {
     const { tripId } = params;
 
@@ -15,12 +15,14 @@ export async function GET(_request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const isIdeas = new URL(request.url).searchParams.get('ideas') === 'true';
+
     const [flights, lodgings, carRentals, restaurants, activities] = await Promise.all([
-      prisma.flight.findMany({ where: { tripId }, orderBy: { departureDate: 'asc' } }),
-      prisma.lodging.findMany({ where: { tripId }, orderBy: { checkIn: 'asc' } }),
-      prisma.carRental.findMany({ where: { tripId }, orderBy: { pickupDate: 'asc' } }),
-      prisma.restaurant.findMany({ where: { tripId }, orderBy: { date: 'asc' } }),
-      prisma.activity.findMany({ where: { tripId }, orderBy: { date: 'asc' } }),
+      prisma.flight.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
+      prisma.lodging.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
+      prisma.carRental.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
+      prisma.restaurant.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
+      prisma.activity.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
     ]);
 
     return NextResponse.json({ flights, lodgings, carRentals, restaurants, activities });
@@ -40,6 +42,42 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     const body = await request.json();
+
+    // Route to idea schema when isIdea: true
+    if (body.isIdea === true) {
+      const result = createIdeaEntrySchema.safeParse(body);
+      if (!result.success) {
+        return NextResponse.json({ error: result.error.flatten().fieldErrors }, { status: 400 });
+      }
+      switch (result.data.type) {
+        case 'flight': {
+          const { type: _t, ...data } = result.data;
+          const entry = await prisma.flight.create({ data: { ...data, tripId, createdById: session.user.id } });
+          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
+        }
+        case 'lodging': {
+          const { type: _t, ...data } = result.data;
+          const entry = await prisma.lodging.create({ data: { ...data, tripId, createdById: session.user.id } });
+          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
+        }
+        case 'carRental': {
+          const { type: _t, ...data } = result.data;
+          const entry = await prisma.carRental.create({ data: { ...data, tripId, createdById: session.user.id } });
+          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
+        }
+        case 'restaurant': {
+          const { type: _t, ...data } = result.data;
+          const entry = await prisma.restaurant.create({ data: { ...data, tripId, createdById: session.user.id } });
+          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
+        }
+        case 'activity': {
+          const { type: _t, ...data } = result.data;
+          const entry = await prisma.activity.create({ data: { ...data, tripId, createdById: session.user.id } });
+          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
+        }
+      }
+    }
+
     const result = createEntrySchema.safeParse(body);
 
     if (!result.success) {

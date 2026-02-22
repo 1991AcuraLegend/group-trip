@@ -1,11 +1,13 @@
 import type { Flight, Lodging, CarRental, Restaurant, Activity } from '@prisma/client';
 import type { EntryType } from '@/types';
 
-export function formatDate(d: Date | string) {
+export function formatDate(d: Date | string | null | undefined) {
+  if (!d) return null;
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
-export function formatDatetime(d: Date | string) {
+export function formatDatetime(d: Date | string | null | undefined) {
+  if (!d) return null;
   return new Date(d).toLocaleString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
     hour: 'numeric', minute: '2-digit',
