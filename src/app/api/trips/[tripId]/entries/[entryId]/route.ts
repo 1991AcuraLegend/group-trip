@@ -54,6 +54,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
     const membership = await getTripMembership(tripId, session.user.id);
     if (!membership) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (membership.role === 'VIEWER') return NextResponse.json({ error: 'View-only members cannot edit entries' }, { status: 403 });
 
     const body = await request.json();
     let entry;
@@ -140,6 +141,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
 
     const membership = await getTripMembership(tripId, session.user.id);
     if (!membership) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (membership.role === 'VIEWER') return NextResponse.json({ error: 'View-only members cannot delete entries' }, { status: 403 });
 
     switch (type) {
       case 'flight': await prisma.flight.delete({ where: { id: entryId } }); break;

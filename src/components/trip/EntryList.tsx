@@ -12,12 +12,13 @@ type Props = {
   entries: Entry[];
   type: EntryType;
   tripId: string;
+  canEdit: boolean;
   onEdit: (entry: Entry) => void;
   selectedEntryId: string | null;
   onSelectEntry: (entryId: string | null) => void;
 };
 
-export function EntryList({ entries, type, tripId, onEdit, selectedEntryId, onSelectEntry }: Props) {
+export function EntryList({ entries, type, tripId, canEdit, onEdit, selectedEntryId, onSelectEntry }: Props) {
   if (entries.length === 0) {
     return (
       <div className="py-10 text-center text-sm text-sand-400">
@@ -38,6 +39,7 @@ export function EntryList({ entries, type, tripId, onEdit, selectedEntryId, onSe
           entry={entry}
           type={type}
           tripId={tripId}
+          canEdit={canEdit}
           onEdit={onEdit}
           isSelected={selectedEntryId === entry.id}
           onSelect={() => onSelectEntry(entry.id === selectedEntryId ? null : entry.id)}

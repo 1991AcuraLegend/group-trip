@@ -8,13 +8,24 @@ type Params = { params: { code: string } };
 export async function GET(_request: NextRequest, { params }: Params) {
   const session = await getSession();
 
-  const trip = await prisma.trip.findUnique({
+  // Check owner share code first, then viewer share code
+  let trip = await prisma.trip.findUnique({
     where: { shareCode: params.code },
     include: {
       owner: { select: { name: true } },
       _count: { select: { members: true } },
     },
   });
+
+  if (!trip) {
+    trip = await prisma.trip.findUnique({
+      where: { viewerShareCode: params.code },
+      include: {
+        owner: { select: { name: true } },
+        _count: { select: { members: true } },
+      },
+    });
+  }
 
   if (!trip) return NextResponse.json({ error: 'Invalid or expired share link' }, { status: 404 });
 
@@ -38,7 +49,15 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
 export async function POST(_request: NextRequest, { params }: Params) {
   return withAuth(async (session) => {
-    const trip = await prisma.trip.findUnique({ where: { shareCode: params.code } });
+    // Determine if this is the owner link or the viewer link
+    let trip = await prisma.trip.findUnique({ where: { shareCode: params.code } });
+    let isViewerCode = false;
+
+    if (!trip) {
+      trip = await prisma.trip.findUnique({ where: { viewerShareCode: params.code } });
+      isViewerCode = true;
+    }
+
     if (!trip) return NextResponse.json({ error: 'Invalid or expired share link' }, { status: 404 });
 
     const existing = await prisma.tripMember.findUnique({
@@ -46,8 +65,10 @@ export async function POST(_request: NextRequest, { params }: Params) {
     });
     if (existing) return NextResponse.json({ error: 'Already a member of this trip' }, { status: 409 });
 
+    const role = isViewerCode ? 'VIEWER' : trip.shareRole;
+
     await prisma.tripMember.create({
-      data: { userId: session.user.id, tripId: trip.id, role: 'COLLABORATOR' },
+      data: { userId: session.user.id, tripId: trip.id, role },
     });
 
     return NextResponse.json(trip);

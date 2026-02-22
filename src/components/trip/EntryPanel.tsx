@@ -17,11 +17,11 @@ import { ENTRY_LABELS } from '@/lib/constants';
 
 type AnyEntry = Flight | Lodging | CarRental | Restaurant | Activity;
 
-type Props = { tripId: string; selectedEntryId: string | null; onSelectEntry: (entryId: string | null) => void };
+type Props = { tripId: string; canEdit: boolean; selectedEntryId: string | null; onSelectEntry: (entryId: string | null) => void };
 
 const TAB_ORDER: EntryType[] = ['flight', 'lodging', 'carRental', 'restaurant', 'activity'];
 
-export function EntryPanel({ tripId, selectedEntryId, onSelectEntry }: Props) {
+export function EntryPanel({ tripId, canEdit, selectedEntryId, onSelectEntry }: Props) {
   const { data: entries, isLoading, error } = useEntries(tripId);
   const [activeTab, setActiveTab] = useState<EntryType>('flight');
   const [createOpen, setCreateOpen] = useState(false);
@@ -94,10 +94,12 @@ export function EntryPanel({ tripId, selectedEntryId, onSelectEntry }: Props) {
 
       <div className="flex items-center justify-between px-4 py-3 border-b border-sand-200">
         <span className="text-sm font-medium text-sand-700">{ENTRY_LABELS[activeTab]}</span>
-        <Button size="sm" onClick={() => setCreateOpen(true)} className="whitespace-nowrap">
-          <span className="hidden sm:inline">+ Add {ENTRY_LABELS[activeTab]}</span>
-          <span className="sm:hidden">+ Add</span>
-        </Button>
+        {canEdit && (
+          <Button size="sm" onClick={() => setCreateOpen(true)} className="whitespace-nowrap">
+            <span className="hidden sm:inline">+ Add {ENTRY_LABELS[activeTab]}</span>
+            <span className="sm:hidden">+ Add</span>
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -114,6 +116,7 @@ export function EntryPanel({ tripId, selectedEntryId, onSelectEntry }: Props) {
             entries={getActiveEntries()}
             type={activeTab}
             tripId={tripId}
+            canEdit={canEdit}
             onEdit={(entry) => handleEdit(activeTab, entry)}
             selectedEntryId={selectedEntryId}
             onSelectEntry={onSelectEntry}

@@ -17,8 +17,13 @@ export type MemberWithUser = {
 };
 
 export type ShareInfo = {
+  // Owner's configurable link (null when the current user is not the owner)
   shareCode: string | null;
   shareUrl: string | null;
+  shareRole: MemberRole | null;
+  // View-only link shown to non-owners (null when the current user is the owner)
+  viewerShareCode: string | null;
+  viewerShareUrl: string | null;
   memberCount: number;
 };
 
@@ -47,6 +52,38 @@ export function useRemoveMember(tripId: string) {
   });
 }
 
+export function useLeaveTrip(tripId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (memberId: string) => {
+      const res = await fetch(`/api/trips/${tripId}/members/${memberId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to leave trip');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: memberKeys.all(tripId) });
+      queryClient.invalidateQueries({ queryKey: tripKeys.all });
+    },
+  });
+}
+
+export function useUpdateMemberRole(tripId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ memberId, role }: { memberId: string; role: MemberRole }) => {
+      const res = await fetch(`/api/trips/${tripId}/members/${memberId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) throw new Error('Failed to update role');
+      return res.json() as Promise<MemberWithUser>;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: memberKeys.all(tripId) }),
+  });
+}
+
 export function useShareInfo(tripId: string) {
   return useQuery<ShareInfo>({
     queryKey: memberKeys.share(tripId),
@@ -62,10 +99,14 @@ export function useShareInfo(tripId: string) {
 export function useGenerateShareLink(tripId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`/api/trips/${tripId}/share`, { method: 'POST' });
+    mutationFn: async (role: MemberRole = 'COLLABORATOR') => {
+      const res = await fetch(`/api/trips/${tripId}/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
       if (!res.ok) throw new Error('Failed to generate share link');
-      return res.json() as Promise<{ shareCode: string; shareUrl: string }>;
+      return res.json() as Promise<{ shareCode: string; shareUrl: string; shareRole: MemberRole }>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: memberKeys.share(tripId) });

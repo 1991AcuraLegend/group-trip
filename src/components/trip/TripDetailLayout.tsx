@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useTrip } from '@/hooks/useTrips';
 import { useEntries } from '@/hooks/useEntries';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -15,6 +16,7 @@ type Props = { tripId: string };
 export function TripDetailLayout({ tripId }: Props) {
   const { data: trip, isLoading: tripLoading, error: tripError } = useTrip(tripId);
   const { data: entries } = useEntries(tripId);
+  const { data: session } = useSession();
   const isMobile = useIsMobile();
   const [mobileView, setMobileView] = useState<'map' | 'planner'>('map');
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -37,6 +39,11 @@ export function TripDetailLayout({ tripId }: Props) {
 
   const mappableEntries = entries ? entriesToMappable(entries) : [];
   const memberCount = trip.members.length;
+
+  // Determine if the current user can edit entries
+  const currentMember = trip.members.find((m) => m.userId === session?.user?.id);
+  const canEdit = !currentMember || currentMember.role !== 'VIEWER';
+
   const entryCount = entries
     ? entries.flights.length + entries.lodgings.length + entries.carRentals.length +
       entries.restaurants.length + entries.activities.length
@@ -52,6 +59,7 @@ export function TripDetailLayout({ tripId }: Props) {
         <div className={`${mobileView === 'planner' ? 'flex' : 'hidden'} lg:flex flex-1 w-full overflow-hidden lg:w-[540px] lg:flex-none border-b lg:border-b-0 lg:border-r border-sand-200`}>
           <EntryPanel
             tripId={tripId}
+            canEdit={canEdit}
             selectedEntryId={selectedEntryId}
             onSelectEntry={(entryId) => {
               setSelectedEntryId(entryId);
