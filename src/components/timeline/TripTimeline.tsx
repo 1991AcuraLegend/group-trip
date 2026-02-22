@@ -139,7 +139,7 @@ export function TripTimeline({ tripId }: Props) {
               return (
                 <div
                   key={`day-${dayIndex}-${day.toISOString()}`}
-                  className="flex flex-col h-full bg-white rounded-lg border border-sand-200 shadow-sm"
+                  className="flex flex-col h-full bg-white rounded-lg border border-sand-200 shadow-sm overflow-x-hidden"
                   style={{ width: COLUMN_WIDTH }}
                 >
                   {/* Column header */}
@@ -151,7 +151,7 @@ export function TripTimeline({ tripId }: Props) {
 
                   {/* Column content - scrollable by time */}
                   <div
-                    className="flex-1 relative overflow-auto"
+                    className="flex-1 relative overflow-y-auto overflow-x-hidden"
                   >
                     {/* Hour labels and lines */}
                     {hourLabels.map(({ label, top }, i) => (

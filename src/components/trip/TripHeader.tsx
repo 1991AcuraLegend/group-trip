@@ -80,7 +80,7 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
 
   return (
     <header className="glass border-b border-sand-200 bg-white px-4 py-3 md:px-6">
-      {/* Row 1: back link | trip name/dates | action buttons */}
+      {/* Header: back link | trip name/dates | segmented nav | action buttons */}
       <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:items-center sm:gap-4">
         <div className="w-full flex items-center justify-between sm:contents">
           <Link
@@ -115,7 +115,7 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
           </div>
         </div>
 
-        <div className="w-full sm:flex-1 sm:min-w-0">
+        <div className="w-full sm:w-auto">
           <h1 className="text-lg font-bold font-display text-ocean-900 truncate">{trip.name}</h1>
           <div className="flex items-center gap-3 text-xs text-sand-500">
             {dateRange && <span>{dateRange}</span>}
@@ -124,11 +124,10 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
             </span>
           </div>
         </div>
-      </div>
 
-      {/* Row 2: Segmented nav centered */}
-      <div className="flex justify-center mt-2 pb-0.5">
-        <SegmentedNav tripId={trip.id} active={activeView} />
+        <div className="w-full sm:flex-1 flex justify-center">
+          <SegmentedNav tripId={trip.id} active={activeView} />
+        </div>
       </div>
 
       {session?.user?.id && (
