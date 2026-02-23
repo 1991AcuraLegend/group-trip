@@ -14,11 +14,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Tabs } from '@/components/ui/Tabs';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { FlightIdeaForm } from '@/components/trip/forms/idea/FlightIdeaForm';
-import { LodgingIdeaForm } from '@/components/trip/forms/idea/LodgingIdeaForm';
-import { CarRentalIdeaForm } from '@/components/trip/forms/idea/CarRentalIdeaForm';
-import { RestaurantIdeaForm } from '@/components/trip/forms/idea/RestaurantIdeaForm';
-import { ActivityIdeaForm } from '@/components/trip/forms/idea/ActivityIdeaForm';
+import { ideaFormRegistry } from '@/components/trip/forms/registry';
 
 const TAB_ORDER: EntryType[] = ['flight', 'lodging', 'carRental', 'restaurant', 'activity'];
 
@@ -38,18 +34,8 @@ function IdeaColumn({
   const [addOpen, setAddOpen] = useState(false);
 
   function renderAddForm() {
-    switch (type) {
-      case 'flight':
-        return <FlightIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-      case 'lodging':
-        return <LodgingIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-      case 'carRental':
-        return <CarRentalIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-      case 'restaurant':
-        return <RestaurantIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-      case 'activity':
-        return <ActivityIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-    }
+    const FormComponent = ideaFormRegistry[type];
+    return <FormComponent tripId={tripId} onClose={() => setAddOpen(false)} />;
   }
 
   return (
@@ -118,18 +104,8 @@ function MobileIdeas({
   }));
 
   function renderAddForm() {
-    switch (activeTab) {
-      case 'flight':
-        return <FlightIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-      case 'lodging':
-        return <LodgingIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-      case 'carRental':
-        return <CarRentalIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-      case 'restaurant':
-        return <RestaurantIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-      case 'activity':
-        return <ActivityIdeaForm tripId={tripId} onClose={() => setAddOpen(false)} />;
-    }
+    const FormComponent = ideaFormRegistry[activeTab];
+    return <FormComponent tripId={tripId} onClose={() => setAddOpen(false)} />;
   }
 
   const activeEntries = data[activeTab];
