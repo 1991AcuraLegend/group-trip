@@ -1,0 +1,63 @@
+# Node modules and dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnp
+.pnp.js
+
+# Next.js build output and cache
+.next/
+out/
+.swc
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Environment files (use docker-compose .env)
+.env
+.env.local
+.env*.local
+
+# Development files
+.tunnel.pid
+.pids
+.nextjs.log
+.tunnel.log
+
+# Testing
+coverage/
+.vitest/
+dist/
+
+# OS files
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Docker and deployment
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+.dockerignore
+
+# Build and CI/CD
+start.sh
+stop.sh
+playwright.config.ts
+vitest.config.ts
+
+# Documentation and config (optional to exclude)
+README.md
+CLAUDE.md
+MASTER_PLAN.md
