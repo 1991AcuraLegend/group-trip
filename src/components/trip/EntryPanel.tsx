@@ -8,11 +8,7 @@ import { Tabs } from '@/components/ui/Tabs';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { EntryList } from './EntryList';
-import { FlightForm } from './forms/FlightForm';
-import { LodgingForm } from './forms/LodgingForm';
-import { CarRentalForm } from './forms/CarRentalForm';
-import { RestaurantForm } from './forms/RestaurantForm';
-import { ActivityForm } from './forms/ActivityForm';
+import { planFormRegistry, ENTRIES_KEY } from './forms/registry';
 import { ENTRY_LABELS } from '@/lib/constants';
 
 type AnyEntry = Flight | Lodging | CarRental | Restaurant | Activity;
@@ -59,29 +55,13 @@ export function EntryPanel({ tripId, canEdit, selectedEntryId, onSelectEntry }: 
 
   function renderForm() {
     if (!activeType) return null;
-    switch (activeType) {
-      case 'flight':
-        return <FlightForm tripId={tripId} onClose={closeForm} existingFlight={editingEntry?.type === 'flight' ? (editingEntry.data as Flight) : undefined} />;
-      case 'lodging':
-        return <LodgingForm tripId={tripId} onClose={closeForm} existingLodging={editingEntry?.type === 'lodging' ? (editingEntry.data as Lodging) : undefined} />;
-      case 'carRental':
-        return <CarRentalForm tripId={tripId} onClose={closeForm} existingCarRental={editingEntry?.type === 'carRental' ? (editingEntry.data as CarRental) : undefined} />;
-      case 'restaurant':
-        return <RestaurantForm tripId={tripId} onClose={closeForm} existingRestaurant={editingEntry?.type === 'restaurant' ? (editingEntry.data as Restaurant) : undefined} />;
-      case 'activity':
-        return <ActivityForm tripId={tripId} onClose={closeForm} existingActivity={editingEntry?.type === 'activity' ? (editingEntry.data as Activity) : undefined} />;
-    }
+    const FormComponent = planFormRegistry[activeType];
+    return <FormComponent tripId={tripId} onClose={closeForm} existingEntry={editingEntry?.data} />;
   }
 
   function getActiveEntries(): AnyEntry[] {
     if (!entries) return [];
-    switch (activeTab) {
-      case 'flight': return entries.flights;
-      case 'lodging': return entries.lodgings;
-      case 'carRental': return entries.carRentals;
-      case 'restaurant': return entries.restaurants;
-      case 'activity': return entries.activities;
-    }
+    return entries[ENTRIES_KEY[activeTab]];
   }
 
   return (

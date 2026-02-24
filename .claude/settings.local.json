@@ -12,7 +12,11 @@
       "Bash(timeout 15 npx next dev:*)",
       "Bash(npx prisma validate:*)",
       "Bash(ls:*)",
-      "Bash(npx next build:*)"
+      "Bash(npx next build:*)",
+      "Bash(python3 -m skills.codebase_analysis.analyze --step 1)",
+      "Bash(head -60 /Users/cbesmer/1991acuralegend/group-trip/src/app/api/trips/[tripId]/route.ts)",
+      "Bash(/Users/cbesmer/1991acuralegend/group-trip/node_modules/.bin/next --version)",
+      "Bash(/Users/cbesmer/1991acuralegend/group-trip/node_modules/.bin/tsc --noEmit)"
     ]
   }
 }

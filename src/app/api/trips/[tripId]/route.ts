@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { withAuth } from '@/lib/auth-helpers';
+import { withTripAuth } from '@/lib/auth-helpers';
 import { updateTripSchema } from '@/validators/trip';
-import { getTripMembership, isTripOwner } from '@/lib/trip-auth';
 
 type Params = { params: { tripId: string } };
 
 export async function GET(_request: NextRequest, { params }: Params) {
-  return withAuth(async (session) => {
-    const { tripId } = params;
-
-    const membership = await getTripMembership(tripId, session.user.id);
-    if (!membership) {
-      const trip = await prisma.trip.findUnique({ where: { id: tripId } });
-      return NextResponse.json(
-        { error: trip ? 'Forbidden' : 'Not found' },
-        { status: trip ? 403 : 404 }
-      );
-    }
-
+  const { tripId } = params;
+  return withTripAuth(tripId, 'VIEWER', async () => {
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
       include: {
@@ -42,14 +31,8 @@ export async function GET(_request: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(request: NextRequest, { params }: Params) {
-  return withAuth(async (session) => {
-    const { tripId } = params;
-
-    const membership = await getTripMembership(tripId, session.user.id);
-    if (!membership) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
+  const { tripId } = params;
+  return withTripAuth(tripId, 'COLLABORATOR', async () => {
     const body = await request.json();
     const result = updateTripSchema.safeParse(body);
 
@@ -74,20 +57,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_request: NextRequest, { params }: Params) {
-  return withAuth(async (session) => {
-    const { tripId } = params;
-
-    const owner = await isTripOwner(tripId, session.user.id);
-    if (!owner) {
-      const membership = await getTripMembership(tripId, session.user.id);
-      return NextResponse.json(
-        { error: membership ? 'Forbidden' : 'Not found' },
-        { status: membership ? 403 : 404 }
-      );
-    }
-
+  const { tripId } = params;
+  return withTripAuth(tripId, 'OWNER', async () => {
     await prisma.trip.delete({ where: { id: tripId } });
-
     return new NextResponse(null, { status: 204 });
   });
 }

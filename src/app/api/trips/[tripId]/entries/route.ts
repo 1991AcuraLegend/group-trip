@@ -1,46 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { withAuth } from '@/lib/auth-helpers';
+import { withTripAuth } from '@/lib/auth-helpers';
 import { createEntrySchema, createIdeaEntrySchema } from '@/validators/entry';
-import { getTripMembership } from '@/lib/trip-auth';
+import { entryRegistry, ENTRY_TYPES, convertDates } from '@/lib/entry-registry';
 
 type Params = { params: { tripId: string } };
 
 export async function GET(request: NextRequest, { params }: Params) {
-  return withAuth(async (session) => {
-    const { tripId } = params;
-
-    const membership = await getTripMembership(tripId, session.user.id);
-    if (!membership) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
+  const { tripId } = params;
+  return withTripAuth(tripId, 'VIEWER', async () => {
     const isIdeas = new URL(request.url).searchParams.get('ideas') === 'true';
 
-    const [flights, lodgings, carRentals, restaurants, activities] = await Promise.all([
-      prisma.flight.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
-      prisma.lodging.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
-      prisma.carRental.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
-      prisma.restaurant.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
-      prisma.activity.findMany({ where: { tripId, isIdea: isIdeas }, orderBy: { createdAt: 'asc' } }),
-    ]);
+    const results = await Promise.all(
+      ENTRY_TYPES.map(async (type) => {
+        const config = entryRegistry[type];
+        const entries = await config.delegate(prisma).findMany({
+          where: { tripId, isIdea: isIdeas },
+          orderBy: { createdAt: 'asc' },
+        });
+        return [config.pluralKey, entries] as const;
+      })
+    );
 
-    return NextResponse.json({ flights, lodgings, carRentals, restaurants, activities });
+    return NextResponse.json(Object.fromEntries(results));
   });
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
-  return withAuth(async (session) => {
-    const { tripId } = params;
-
-    const membership = await getTripMembership(tripId, session.user.id);
-    if (!membership) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-    if (membership.role === 'VIEWER') {
-      return NextResponse.json({ error: 'View-only members cannot add entries' }, { status: 403 });
-    }
-
+  const { tripId } = params;
+  return withTripAuth(tripId, 'COLLABORATOR', async ({ session }) => {
     const body = await request.json();
 
     // Route to idea schema when isIdea: true
@@ -49,110 +37,25 @@ export async function POST(request: NextRequest, { params }: Params) {
       if (!result.success) {
         return NextResponse.json({ error: result.error.flatten().fieldErrors }, { status: 400 });
       }
-      switch (result.data.type) {
-        case 'flight': {
-          const { type: _t, ...data } = result.data;
-          const entry = await prisma.flight.create({ data: { ...data, tripId, createdById: session.user.id } });
-          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
-        }
-        case 'lodging': {
-          const { type: _t, ...data } = result.data;
-          const entry = await prisma.lodging.create({ data: { ...data, tripId, createdById: session.user.id } });
-          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
-        }
-        case 'carRental': {
-          const { type: _t, ...data } = result.data;
-          const entry = await prisma.carRental.create({ data: { ...data, tripId, createdById: session.user.id } });
-          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
-        }
-        case 'restaurant': {
-          const { type: _t, ...data } = result.data;
-          const entry = await prisma.restaurant.create({ data: { ...data, tripId, createdById: session.user.id } });
-          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
-        }
-        case 'activity': {
-          const { type: _t, ...data } = result.data;
-          const entry = await prisma.activity.create({ data: { ...data, tripId, createdById: session.user.id } });
-          return NextResponse.json({ type: _t, data: entry }, { status: 201 });
-        }
-      }
+      const { type, ...data } = result.data;
+      const config = entryRegistry[type];
+      const entry = await config.delegate(prisma).create({
+        data: { ...data, tripId, createdById: session.user.id },
+      });
+      return NextResponse.json({ type, data: entry }, { status: 201 });
     }
 
     const result = createEntrySchema.safeParse(body);
-
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.flatten().fieldErrors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const toDate = (v: string) => new Date(v);
-
-    switch (result.data.type) {
-      case 'flight': {
-        const { type, ...data } = result.data;
-        const entry = await prisma.flight.create({
-          data: {
-            ...data,
-            departureDate: toDate(data.departureDate),
-            arrivalDate: toDate(data.arrivalDate),
-            tripId,
-            createdById: session.user.id,
-          },
-        });
-        return NextResponse.json({ type, data: entry }, { status: 201 });
-      }
-      case 'lodging': {
-        const { type, ...data } = result.data;
-        const entry = await prisma.lodging.create({
-          data: {
-            ...data,
-            checkIn: toDate(data.checkIn),
-            checkOut: toDate(data.checkOut),
-            tripId,
-            createdById: session.user.id,
-          },
-        });
-        return NextResponse.json({ type, data: entry }, { status: 201 });
-      }
-      case 'carRental': {
-        const { type, ...data } = result.data;
-        const entry = await prisma.carRental.create({
-          data: {
-            ...data,
-            pickupDate: toDate(data.pickupDate),
-            dropoffDate: toDate(data.dropoffDate),
-            tripId,
-            createdById: session.user.id,
-          },
-        });
-        return NextResponse.json({ type, data: entry }, { status: 201 });
-      }
-      case 'restaurant': {
-        const { type, ...data } = result.data;
-        const entry = await prisma.restaurant.create({
-          data: {
-            ...data,
-            date: toDate(data.date),
-            tripId,
-            createdById: session.user.id,
-          },
-        });
-        return NextResponse.json({ type, data: entry }, { status: 201 });
-      }
-      case 'activity': {
-        const { type, ...data } = result.data;
-        const entry = await prisma.activity.create({
-          data: {
-            ...data,
-            date: toDate(data.date),
-            tripId,
-            createdById: session.user.id,
-          },
-        });
-        return NextResponse.json({ type, data: entry }, { status: 201 });
-      }
-    }
+    const { type, ...data } = result.data;
+    const config = entryRegistry[type];
+    const converted = convertDates(type, data as Record<string, unknown>);
+    const entry = await config.delegate(prisma).create({
+      data: { ...converted, tripId, createdById: session.user.id },
+    });
+    return NextResponse.json({ type, data: entry }, { status: 201 });
   });
 }

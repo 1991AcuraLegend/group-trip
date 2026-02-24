@@ -9,11 +9,7 @@ import { useEntryColors } from '@/hooks/useEntryColors';
 import { formatCost } from '@/components/trip/EntryDetails';
 import { Modal } from '@/components/ui/Modal';
 import { MoveToPlanModal } from '@/components/trip/MoveToPlanModal';
-import { FlightIdeaForm } from './forms/idea/FlightIdeaForm';
-import { LodgingIdeaForm } from './forms/idea/LodgingIdeaForm';
-import { CarRentalIdeaForm } from './forms/idea/CarRentalIdeaForm';
-import { RestaurantIdeaForm } from './forms/idea/RestaurantIdeaForm';
-import { ActivityIdeaForm } from './forms/idea/ActivityIdeaForm';
+import { ideaFormRegistry } from './forms/registry';
 
 type AnyEntry = Flight | Lodging | CarRental | Restaurant | Activity;
 
@@ -90,18 +86,8 @@ export function IdeaCard({ entry, type, tripId, canEdit }: Props) {
   }
 
   function renderEditForm() {
-    switch (type) {
-      case 'flight':
-        return <FlightIdeaForm tripId={tripId} onClose={() => setEditOpen(false)} existingIdea={entry as Flight} />;
-      case 'lodging':
-        return <LodgingIdeaForm tripId={tripId} onClose={() => setEditOpen(false)} existingIdea={entry as Lodging} />;
-      case 'carRental':
-        return <CarRentalIdeaForm tripId={tripId} onClose={() => setEditOpen(false)} existingIdea={entry as CarRental} />;
-      case 'restaurant':
-        return <RestaurantIdeaForm tripId={tripId} onClose={() => setEditOpen(false)} existingIdea={entry as Restaurant} />;
-      case 'activity':
-        return <ActivityIdeaForm tripId={tripId} onClose={() => setEditOpen(false)} existingIdea={entry as Activity} />;
-    }
+    const FormComponent = ideaFormRegistry[type];
+    return <FormComponent tripId={tripId} onClose={() => setEditOpen(false)} existingIdea={entry} />;
   }
 
   return (
