@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 
 export default function RegisterPage() {
@@ -12,7 +13,9 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <RegisterForm />
+        <Suspense fallback={<div className="h-32" />}>
+          <RegisterForm />
+        </Suspense>
 
         <p className="text-center text-sm text-sand-500">
           Already have an account?{" "}
