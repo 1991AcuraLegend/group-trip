@@ -199,6 +199,19 @@ describe('createRestaurantSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('accepts attendeeIds as an array of user id strings', () => {
+    const result = createRestaurantSchema.safeParse({
+      ...valid,
+      attendeeIds: ['user-1', 'user-2'],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts empty attendeeIds array', () => {
+    const result = createRestaurantSchema.safeParse({ ...valid, attendeeIds: [] });
+    expect(result.success).toBe(true);
+  });
+
   it('rejects negative cost', () => {
     expect(createRestaurantSchema.safeParse({ ...valid, cost: -1 }).success).toBe(false);
   });
@@ -238,6 +251,19 @@ describe('createActivitySchema', () => {
       category: 'Sightseeing',
       bookingRef: 'TOUR001',
     });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts attendeeIds as an array of user id strings', () => {
+    const result = createActivitySchema.safeParse({
+      ...valid,
+      attendeeIds: ['user-1', 'user-2'],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts empty attendeeIds array', () => {
+    const result = createActivitySchema.safeParse({ ...valid, attendeeIds: [] });
     expect(result.success).toBe(true);
   });
 
@@ -352,6 +378,17 @@ describe('createRestaurantIdeaSchema', () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it('accepts attendeeIds in idea schema', () => {
+    const result = createRestaurantIdeaSchema.safeParse({
+      type: 'restaurant',
+      isIdea: true,
+      name: 'Café',
+      address: '789 Ave',
+      attendeeIds: ['user-1'],
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('createActivityIdeaSchema', () => {
@@ -360,6 +397,16 @@ describe('createActivityIdeaSchema', () => {
       type: 'activity',
       isIdea: true,
       name: 'Museum Visit',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts attendeeIds in idea schema', () => {
+    const result = createActivityIdeaSchema.safeParse({
+      type: 'activity',
+      isIdea: true,
+      name: 'Museum Visit',
+      attendeeIds: ['user-1', 'user-2'],
     });
     expect(result.success).toBe(true);
   });

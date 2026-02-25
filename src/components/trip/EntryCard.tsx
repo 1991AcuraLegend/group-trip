@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import type { Flight, Lodging, CarRental, Restaurant, Activity } from '@prisma/client';
+import type { Flight, Lodging, CarRental, Restaurant, Activity, TripMember, User } from '@prisma/client';
 import type { EntryType } from '@/types';
 import { ENTRY_LABELS } from '@/lib/constants';
 import { useDeleteEntry } from '@/hooks/useEntries';
 import { useEntryColors } from '@/hooks/useEntryColors';
 import { CardBody } from '@/components/trip/EntryDetails';
+
+type MemberUser = TripMember & { user: Pick<User, 'id' | 'name' | 'email'> };
 
 type Props = {
   entry: Flight | Lodging | CarRental | Restaurant | Activity;
@@ -16,9 +18,10 @@ type Props = {
   onEdit: (entry: Flight | Lodging | CarRental | Restaurant | Activity) => void;
   isSelected?: boolean;
   onSelect?: () => void;
+  members?: MemberUser[];
 };
 
-export function EntryCard({ entry, type, tripId, canEdit, onEdit, isSelected, onSelect }: Props) {
+export function EntryCard({ entry, type, tripId, canEdit, onEdit, isSelected, onSelect, members }: Props) {
   const deleteEntry = useDeleteEntry(tripId);
   const [showNotes, setShowNotes] = useState(false);
   const notes = (entry as { notes?: string | null }).notes;
@@ -40,7 +43,7 @@ export function EntryCard({ entry, type, tripId, canEdit, onEdit, isSelected, on
     >
       <div className="p-2.5 sm:p-3 flex gap-2 sm:gap-3">
         <div className="flex-1 flex flex-col gap-1 min-w-0">
-          <CardBody type={type} entry={entry} />
+          <CardBody type={type} entry={entry} members={members} />
           {notes && (
             <div className="mt-1">
               <button

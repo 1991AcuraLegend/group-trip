@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Flight, Lodging, CarRental, Restaurant, Activity } from '@prisma/client';
 import type { EntryType } from '@/types';
 import { useEntries } from '@/hooks/useEntries';
+import { useTrip } from '@/hooks/useTrips';
 import { Tabs } from '@/components/ui/Tabs';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -19,9 +20,12 @@ const TAB_ORDER: EntryType[] = ['flight', 'lodging', 'carRental', 'restaurant', 
 
 export function EntryPanel({ tripId, canEdit, selectedEntryId, onSelectEntry }: Props) {
   const { data: entries, isLoading, error } = useEntries(tripId);
+  const { data: trip } = useTrip(tripId);
   const [activeTab, setActiveTab] = useState<EntryType>('flight');
   const [createOpen, setCreateOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<{ type: EntryType; data: AnyEntry } | null>(null);
+
+  const members = trip?.members ?? [];
 
   const counts = entries
     ? {
@@ -100,6 +104,7 @@ export function EntryPanel({ tripId, canEdit, selectedEntryId, onSelectEntry }: 
             onEdit={(entry) => handleEdit(activeTab, entry)}
             selectedEntryId={selectedEntryId}
             onSelectEntry={onSelectEntry}
+            members={members}
           />
         )}
       </div>

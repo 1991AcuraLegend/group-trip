@@ -147,6 +147,7 @@ model Restaurant {
   reservationId String?
   notes         String?
   cost          Float?
+  attendeeIds   String[]
   createdById   String
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -170,6 +171,7 @@ model Activity {
   cost        Float?
   notes       String?
   bookingRef  String?
+  attendeeIds String[]
   createdById String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

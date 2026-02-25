@@ -1,5 +1,7 @@
-import type { Flight, Lodging, CarRental, Restaurant, Activity } from '@prisma/client';
+import type { Flight, Lodging, CarRental, Restaurant, Activity, TripMember, User } from '@prisma/client';
 import type { EntryType } from '@/types';
+
+type MemberUser = TripMember & { user: Pick<User, 'id' | 'name' | 'email'> };
 
 export function formatDate(d: Date | string | null | undefined) {
   if (!d) return null;
@@ -29,7 +31,16 @@ export function Row({ label, value }: { label: string; value: string | null | un
   );
 }
 
-export function CardBody({ type, entry }: { type: EntryType; entry: Flight | Lodging | CarRental | Restaurant | Activity }) {
+function formatAttendees(attendeeIds: string[], members: MemberUser[]): string | null {
+  if (!attendeeIds || attendeeIds.length === 0) return null;
+  const names = attendeeIds
+    .map((id) => members.find((m) => m.userId === id)?.user.name)
+    .filter(Boolean) as string[];
+  if (names.length === 0) return `${attendeeIds.length} attending`;
+  return names.join(', ');
+}
+
+export function CardBody({ type, entry, members = [] }: { type: EntryType; entry: Flight | Lodging | CarRental | Restaurant | Activity; members?: MemberUser[] }) {
   switch (type) {
     case 'flight': {
       const f = entry as Flight;
@@ -84,6 +95,7 @@ export function CardBody({ type, entry }: { type: EntryType; entry: Flight | Lod
           <Row label="Price Range" value={r.priceRange} />
           <Row label="Reservation" value={r.reservationId} />
           <Row label="Cost" value={formatCost(r.cost)} />
+          <Row label="Attendees" value={formatAttendees(r.attendeeIds, members)} />
         </>
       );
     }
@@ -98,6 +110,7 @@ export function CardBody({ type, entry }: { type: EntryType; entry: Flight | Lod
           <Row label="Category" value={a.category} />
           <Row label="Booking" value={a.bookingRef} />
           <Row label="Cost" value={formatCost(a.cost)} />
+          <Row label="Attendees" value={formatAttendees(a.attendeeIds, members)} />
         </>
       );
     }

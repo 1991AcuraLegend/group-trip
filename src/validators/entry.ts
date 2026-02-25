@@ -61,6 +61,7 @@ export const createRestaurantSchema = z.object({
   cuisine: z.string().optional(),
   priceRange: z.string().optional(),
   reservationId: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional(),
   ...baseEntryFields,
 });
 
@@ -76,6 +77,7 @@ export const createActivitySchema = z.object({
   lng: z.number().optional(),
   category: z.string().optional(),
   bookingRef: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional(),
   ...baseEntryFields,
 });
 
@@ -129,6 +131,7 @@ export const createRestaurantIdeaSchema = z.object({
   lat: z.number().optional(),
   lng: z.number().optional(),
   cuisine: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional(),
   ...baseEntryFields,
 });
 
@@ -140,6 +143,7 @@ export const createActivityIdeaSchema = z.object({
   lat: z.number().optional(),
   lng: z.number().optional(),
   category: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional(),
   ...baseEntryFields,
 });
 

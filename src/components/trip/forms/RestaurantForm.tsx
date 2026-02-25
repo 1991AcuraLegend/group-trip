@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
 import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEntries';
+import { useTrip } from '@/hooks/useTrips';
 import type { Restaurant } from '@prisma/client';
 import { toDateInput, toISO } from './shared';
 
@@ -22,6 +23,7 @@ const schema = z.object({
   cuisine: z.string().optional(),
   priceRange: z.string().optional(),
   reservationId: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
 });
@@ -33,8 +35,9 @@ export function RestaurantForm({ tripId, onClose, existingRestaurant, moveToPlan
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
   const promoteToPlan = usePromoteToPlan(tripId);
+  const { data: trip } = useTrip(tripId);
 
-  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, setValue, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: existingRestaurant
       ? {
@@ -47,11 +50,23 @@ export function RestaurantForm({ tripId, onClose, existingRestaurant, moveToPlan
           cuisine: existingRestaurant.cuisine ?? '',
           priceRange: existingRestaurant.priceRange ?? '',
           reservationId: existingRestaurant.reservationId ?? '',
+          attendeeIds: existingRestaurant.attendeeIds ?? [],
           cost: existingRestaurant.cost ?? undefined,
           notes: existingRestaurant.notes ?? '',
         }
-      : undefined,
+      : { attendeeIds: [] },
   });
+
+  const attendeeIds = watch('attendeeIds') ?? [];
+
+  function toggleAttendee(userId: string) {
+    const current = attendeeIds;
+    if (current.includes(userId)) {
+      setValue('attendeeIds', current.filter((id) => id !== userId));
+    } else {
+      setValue('attendeeIds', [...current, userId]);
+    }
+  }
 
   async function onSubmit(data: FormValues) {
     const payload = {
@@ -65,6 +80,7 @@ export function RestaurantForm({ tripId, onClose, existingRestaurant, moveToPlan
       cuisine: data.cuisine || undefined,
       priceRange: data.priceRange || undefined,
       reservationId: data.reservationId || undefined,
+      attendeeIds: data.attendeeIds ?? [],
       cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
       notes: data.notes || undefined,
     };
@@ -124,6 +140,24 @@ export function RestaurantForm({ tripId, onClose, existingRestaurant, moveToPlan
         <Input label="Reservation ID" {...register('reservationId')} />
         <Input label="Cost ($)" type="number" step="0.01" min="0" {...register('cost')} />
       </div>
+      {trip && trip.members.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">Attendees</label>
+          <div className="flex flex-col gap-1 rounded-md border border-gray-200 p-2">
+            {trip.members.map((m) => (
+              <label key={m.userId} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-blue-600"
+                  checked={attendeeIds.includes(m.userId)}
+                  onChange={() => toggleAttendee(m.userId)}
+                />
+                <span className="text-gray-700">{m.user.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Notes</label>
         <textarea rows={2} className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" {...register('notes')} />

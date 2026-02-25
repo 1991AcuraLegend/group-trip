@@ -1,12 +1,13 @@
 'use client';
 
-import type { Flight, Lodging, CarRental, Restaurant, Activity } from '@prisma/client';
+import type { Flight, Lodging, CarRental, Restaurant, Activity, TripMember, User } from '@prisma/client';
 import type { EntryType } from '@/types';
 import { EntryCard } from './EntryCard';
 import { getEntryDate } from '@/lib/entry-helpers';
 import { ENTRY_LABELS } from '@/lib/constants';
 
 type Entry = Flight | Lodging | CarRental | Restaurant | Activity;
+type MemberUser = TripMember & { user: Pick<User, 'id' | 'name' | 'email'> };
 
 type Props = {
   entries: Entry[];
@@ -16,9 +17,10 @@ type Props = {
   onEdit: (entry: Entry) => void;
   selectedEntryId: string | null;
   onSelectEntry: (entryId: string | null) => void;
+  members?: MemberUser[];
 };
 
-export function EntryList({ entries, type, tripId, canEdit, onEdit, selectedEntryId, onSelectEntry }: Props) {
+export function EntryList({ entries, type, tripId, canEdit, onEdit, selectedEntryId, onSelectEntry, members }: Props) {
   if (entries.length === 0) {
     return (
       <div className="py-10 text-center text-sm text-sand-400">
@@ -45,6 +47,7 @@ export function EntryList({ entries, type, tripId, canEdit, onEdit, selectedEntr
           onEdit={onEdit}
           isSelected={selectedEntryId === entry.id}
           onSelect={() => onSelectEntry(entry.id === selectedEntryId ? null : entry.id)}
+          members={members}
         />
       ))}
     </div>

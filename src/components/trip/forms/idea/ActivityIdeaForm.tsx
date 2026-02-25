@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
 import { useCreateIdea, useUpdateEntry } from '@/hooks/useEntries';
+import { useTrip } from '@/hooks/useTrips';
 import type { Activity } from '@prisma/client';
 
 const schema = z.object({
@@ -15,6 +16,7 @@ const schema = z.object({
   lat: z.number().optional(),
   lng: z.number().optional(),
   category: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
 });
@@ -25,8 +27,9 @@ type Props = { tripId: string; onClose: () => void; existingIdea?: Activity };
 export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
   const createIdea = useCreateIdea(tripId);
   const updateEntry = useUpdateEntry(tripId);
+  const { data: trip } = useTrip(tripId);
 
-  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, setValue, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: existingIdea ? {
       name: existingIdea.name,
@@ -34,10 +37,22 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
       lat: existingIdea.lat ?? undefined,
       lng: existingIdea.lng ?? undefined,
       category: existingIdea.category ?? '',
+      attendeeIds: existingIdea.attendeeIds ?? [],
       cost: existingIdea.cost ?? undefined,
       notes: existingIdea.notes ?? '',
-    } : undefined,
+    } : { attendeeIds: [] },
   });
+
+  const attendeeIds = watch('attendeeIds') ?? [];
+
+  function toggleAttendee(userId: string) {
+    const current = attendeeIds;
+    if (current.includes(userId)) {
+      setValue('attendeeIds', current.filter((id) => id !== userId));
+    } else {
+      setValue('attendeeIds', [...current, userId]);
+    }
+  }
 
   async function onSubmit(data: FormValues) {
     if (existingIdea) {
@@ -48,6 +63,7 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
           name: data.name, address: data.address || undefined,
           lat: data.lat, lng: data.lng,
           category: data.category || undefined,
+          attendeeIds: data.attendeeIds ?? [],
           cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
           notes: data.notes || undefined,
         },
@@ -58,6 +74,7 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
         name: data.name, address: data.address || undefined,
         lat: data.lat, lng: data.lng,
         category: data.category || undefined,
+        attendeeIds: data.attendeeIds ?? [],
         cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
         notes: data.notes || undefined,
       });
@@ -88,6 +105,24 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
       />
       <Input label="Category (optional)" placeholder="Museum, Hiking, Tour..." {...register('category')} />
       <Input label="Estimated cost" type="number" min="0" step="0.01" placeholder="0.00" {...register('cost')} />
+      {trip && trip.members.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-sand-700">Attendees</label>
+          <div className="flex flex-col gap-1 rounded-md border border-sand-300 p-2">
+            {trip.members.map((m) => (
+              <label key={m.userId} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="rounded border-sand-300 text-ocean-600"
+                  checked={attendeeIds.includes(m.userId)}
+                  onChange={() => toggleAttendee(m.userId)}
+                />
+                <span className="text-sand-700">{m.user.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-sand-700">Notes</label>
         <textarea
@@ -104,4 +139,3 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
     </form>
   );
 }
-
