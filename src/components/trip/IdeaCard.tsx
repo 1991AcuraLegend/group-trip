@@ -6,6 +6,7 @@ import type { EntryType } from '@/types';
 import { ENTRY_LABELS } from '@/lib/constants';
 import { useDeleteIdea } from '@/hooks/useEntries';
 import { useEntryColors } from '@/hooks/useEntryColors';
+import { useMembers } from '@/hooks/useMembers';
 import { formatCost } from '@/components/trip/EntryDetails';
 import { Modal } from '@/components/ui/Modal';
 import { MoveToPlanModal } from '@/components/trip/MoveToPlanModal';
@@ -79,6 +80,9 @@ export function IdeaCard({ entry, type, tripId, canEdit }: Props) {
   const [moveToPlanOpen, setMoveToPlanOpen] = useState(false);
   const notes = (entry as { notes?: string | null }).notes;
   const cost = (entry as { cost?: number | null }).cost;
+  const { data: members } = useMembers(tripId);
+  const attendeeIds = (entry as { attendeeIds?: string[] }).attendeeIds ?? [];
+  const attendeeNames = attendeeIds.map((id) => members?.find((m) => m.userId === id)?.user.name).filter(Boolean) as string[];
 
   async function handleDelete() {
     if (!window.confirm(`Delete this ${ENTRY_LABELS[type].toLowerCase()} idea?`)) return;
@@ -101,6 +105,15 @@ export function IdeaCard({ entry, type, tripId, canEdit }: Props) {
             <IdeaSummary type={type} entry={entry} />
             {cost != null && cost > 0 && (
               <p className="text-xs text-sand-500 mt-0.5">{formatCost(cost)}</p>
+            )}
+            {attendeeNames.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {attendeeNames.map((name, i) => (
+                  <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sand-100 text-sand-600">
+                    {name}
+                  </span>
+                ))}
+              </div>
             )}
             {notes && (
               <div className="mt-1">

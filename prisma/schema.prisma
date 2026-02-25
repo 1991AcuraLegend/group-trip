@@ -81,6 +81,7 @@ model Flight {
   confirmationNum  String?
   notes            String?
   cost             Float?
+  attendeeIds      String[]  @default([])
   createdById      String
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -102,6 +103,7 @@ model Lodging {
   confirmationNum String?
   notes           String?
   cost            Float?
+  attendeeIds     String[]  @default([])
   createdById     String
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -124,6 +126,7 @@ model CarRental {
   confirmationNum String?
   notes           String?
   cost            Float?
+  attendeeIds     String[]  @default([])
   createdById     String
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -147,6 +150,7 @@ model Restaurant {
   reservationId String?
   notes         String?
   cost          Float?
+  attendeeIds   String[]  @default([])
   createdById   String
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -170,6 +174,7 @@ model Activity {
   cost        Float?
   notes       String?
   bookingRef  String?
+  attendeeIds String[]  @default([])
   createdById String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

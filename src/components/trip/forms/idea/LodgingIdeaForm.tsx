@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
 import { useCreateIdea, useUpdateEntry } from '@/hooks/useEntries';
 import type { Lodging } from '@prisma/client';
+import { AttendeeSelect } from '../AttendeeSelect';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -16,6 +17,7 @@ const schema = z.object({
   lng: z.number().optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -34,6 +36,7 @@ export function LodgingIdeaForm({ tripId, onClose, existingIdea }: Props) {
       lng: existingIdea.lng ?? undefined,
       cost: existingIdea.cost ?? undefined,
       notes: existingIdea.notes ?? '',
+      attendeeIds: (existingIdea as { attendeeIds?: string[] }).attendeeIds ?? [],
     } : undefined,
   });
 
@@ -44,7 +47,7 @@ export function LodgingIdeaForm({ tripId, onClose, existingIdea }: Props) {
         type: 'lodging',
         data: { name: data.name, address: data.address, lat: data.lat, lng: data.lng,
                 cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
-                notes: data.notes || undefined },
+                notes: data.notes || undefined, attendeeIds: data.attendeeIds ?? [] },
       });
     } else {
       await createIdea.mutateAsync({
@@ -52,6 +55,7 @@ export function LodgingIdeaForm({ tripId, onClose, existingIdea }: Props) {
         lat: data.lat, lng: data.lng,
         cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
         notes: data.notes || undefined,
+        attendeeIds: data.attendeeIds ?? [],
       });
     }
     onClose();
@@ -80,6 +84,13 @@ export function LodgingIdeaForm({ tripId, onClose, existingIdea }: Props) {
         )}
       />
       <Input label="Estimated cost" type="number" min="0" step="0.01" placeholder="0.00" {...register('cost')} />
+      <Controller
+        name="attendeeIds"
+        control={control}
+        render={({ field }) => (
+          <AttendeeSelect tripId={tripId} value={field.value ?? []} onChange={field.onChange} variant="idea" />
+        )}
+      />
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-sand-700">Notes</label>
         <textarea

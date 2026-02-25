@@ -1,12 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useCreateIdea, useUpdateEntry } from '@/hooks/useEntries';
 import type { Flight } from '@prisma/client';
+import { AttendeeSelect } from '../AttendeeSelect';
 
 const schema = z.object({
   departureCity: z.string().min(1, 'Departure city is required'),
@@ -14,6 +15,7 @@ const schema = z.object({
   airline: z.string().optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -23,7 +25,7 @@ export function FlightIdeaForm({ tripId, onClose, existingIdea }: Props) {
   const createIdea = useCreateIdea(tripId);
   const updateEntry = useUpdateEntry(tripId);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: existingIdea ? {
       departureCity: existingIdea.departureCity,
@@ -31,6 +33,7 @@ export function FlightIdeaForm({ tripId, onClose, existingIdea }: Props) {
       airline: existingIdea.airline ?? '',
       cost: existingIdea.cost ?? undefined,
       notes: existingIdea.notes ?? '',
+      attendeeIds: (existingIdea as { attendeeIds?: string[] }).attendeeIds ?? [],
     } : undefined,
   });
 
@@ -45,6 +48,7 @@ export function FlightIdeaForm({ tripId, onClose, existingIdea }: Props) {
           airline: data.airline || undefined,
           cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
           notes: data.notes || undefined,
+          attendeeIds: data.attendeeIds ?? [],
         },
       });
     } else {
@@ -56,6 +60,7 @@ export function FlightIdeaForm({ tripId, onClose, existingIdea }: Props) {
         airline: data.airline ?? '',
         cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
         notes: data.notes || undefined,
+        attendeeIds: data.attendeeIds ?? [],
       });
     }
     onClose();
@@ -71,6 +76,13 @@ export function FlightIdeaForm({ tripId, onClose, existingIdea }: Props) {
       </div>
       <Input label="Airline (optional)" {...register('airline')} />
       <Input label="Estimated cost" type="number" min="0" step="0.01" placeholder="0.00" {...register('cost')} />
+      <Controller
+        name="attendeeIds"
+        control={control}
+        render={({ field }) => (
+          <AttendeeSelect tripId={tripId} value={field.value ?? []} onChange={field.onChange} variant="idea" />
+        )}
+      />
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-sand-700">Notes</label>
         <textarea

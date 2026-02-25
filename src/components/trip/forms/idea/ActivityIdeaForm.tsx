@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
 import { useCreateIdea, useUpdateEntry } from '@/hooks/useEntries';
 import type { Activity } from '@prisma/client';
+import { AttendeeSelect } from '../AttendeeSelect';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -17,6 +18,7 @@ const schema = z.object({
   category: z.string().optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -36,6 +38,7 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
       category: existingIdea.category ?? '',
       cost: existingIdea.cost ?? undefined,
       notes: existingIdea.notes ?? '',
+      attendeeIds: (existingIdea as { attendeeIds?: string[] }).attendeeIds ?? [],
     } : undefined,
   });
 
@@ -50,6 +53,7 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
           category: data.category || undefined,
           cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
           notes: data.notes || undefined,
+          attendeeIds: data.attendeeIds ?? [],
         },
       });
     } else {
@@ -60,6 +64,7 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
         category: data.category || undefined,
         cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
         notes: data.notes || undefined,
+        attendeeIds: data.attendeeIds ?? [],
       });
     }
     onClose();
@@ -88,6 +93,13 @@ export function ActivityIdeaForm({ tripId, onClose, existingIdea }: Props) {
       />
       <Input label="Category (optional)" placeholder="Museum, Hiking, Tour..." {...register('category')} />
       <Input label="Estimated cost" type="number" min="0" step="0.01" placeholder="0.00" {...register('cost')} />
+      <Controller
+        name="attendeeIds"
+        control={control}
+        render={({ field }) => (
+          <AttendeeSelect tripId={tripId} value={field.value ?? []} onChange={field.onChange} variant="idea" />
+        )}
+      />
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-sand-700">Notes</label>
         <textarea
