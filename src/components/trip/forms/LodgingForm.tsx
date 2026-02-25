@@ -9,6 +9,7 @@ import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
 import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEntries';
 import type { Lodging } from '@prisma/client';
 import { toDatetimeLocal, toISO } from './shared';
+import { AttendeeSelect } from './AttendeeSelect';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -20,6 +21,7 @@ const schema = z.object({
   confirmationNum: z.string().optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -43,6 +45,7 @@ export function LodgingForm({ tripId, onClose, existingLodging, moveToPlan }: Pr
           confirmationNum: existingLodging.confirmationNum ?? '',
           cost: existingLodging.cost ?? undefined,
           notes: existingLodging.notes ?? '',
+          attendeeIds: (existingLodging as { attendeeIds?: string[] }).attendeeIds ?? [],
         }
       : undefined,
   });
@@ -59,6 +62,7 @@ export function LodgingForm({ tripId, onClose, existingLodging, moveToPlan }: Pr
       confirmationNum: data.confirmationNum || undefined,
       cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
       notes: data.notes || undefined,
+      attendeeIds: data.attendeeIds ?? [],
     };
     if (moveToPlan && existingLodging) {
       await promoteToPlan.mutateAsync({ entryId: existingLodging.id, type: 'lodging', data: payload });
@@ -103,6 +107,13 @@ export function LodgingForm({ tripId, onClose, existingLodging, moveToPlan }: Pr
         <Input label="Confirmation #" {...register('confirmationNum')} />
         <Input label="Cost ($)" type="number" step="0.01" min="0" {...register('cost')} />
       </div>
+      <Controller
+        name="attendeeIds"
+        control={control}
+        render={({ field }) => (
+          <AttendeeSelect tripId={tripId} value={field.value ?? []} onChange={field.onChange} />
+        )}
+      />
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Notes</label>
         <textarea rows={2} className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" {...register('notes')} />

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
 import { useCreateIdea, useUpdateEntry } from '@/hooks/useEntries';
 import type { CarRental } from '@prisma/client';
+import { AttendeeSelect } from '../AttendeeSelect';
 
 const schema = z.object({
   company: z.string().min(1, 'Company is required'),
@@ -17,6 +18,7 @@ const schema = z.object({
   pickupLng: z.number().optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -36,6 +38,7 @@ export function CarRentalIdeaForm({ tripId, onClose, existingIdea }: Props) {
       pickupLng: existingIdea.pickupLng ?? undefined,
       cost: existingIdea.cost ?? undefined,
       notes: existingIdea.notes ?? '',
+      attendeeIds: (existingIdea as { attendeeIds?: string[] }).attendeeIds ?? [],
     } : undefined,
   });
 
@@ -52,6 +55,7 @@ export function CarRentalIdeaForm({ tripId, onClose, existingIdea }: Props) {
           pickupLng: data.pickupLng,
           cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
           notes: data.notes || undefined,
+          attendeeIds: data.attendeeIds ?? [],
         },
       });
     } else {
@@ -65,6 +69,7 @@ export function CarRentalIdeaForm({ tripId, onClose, existingIdea }: Props) {
         pickupLng: data.pickupLng,
         cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
         notes: data.notes || undefined,
+        attendeeIds: data.attendeeIds ?? [],
       });
     }
     onClose();
@@ -105,6 +110,13 @@ export function CarRentalIdeaForm({ tripId, onClose, existingIdea }: Props) {
         )}
       />
       <Input label="Estimated cost" type="number" min="0" step="0.01" placeholder="0.00" {...register('cost')} />
+      <Controller
+        name="attendeeIds"
+        control={control}
+        render={({ field }) => (
+          <AttendeeSelect tripId={tripId} value={field.value ?? []} onChange={field.onChange} variant="idea" />
+        )}
+      />
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-sand-700">Notes</label>
         <textarea

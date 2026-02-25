@@ -9,6 +9,7 @@ import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
 import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEntries';
 import type { Activity } from '@prisma/client';
 import { toDateInput, toISO } from './shared';
+import { AttendeeSelect } from './AttendeeSelect';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -22,6 +23,7 @@ const schema = z.object({
   bookingRef: z.string().optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -47,6 +49,7 @@ export function ActivityForm({ tripId, onClose, existingActivity, moveToPlan }: 
           bookingRef: existingActivity.bookingRef ?? '',
           cost: existingActivity.cost ?? undefined,
           notes: existingActivity.notes ?? '',
+          attendeeIds: (existingActivity as { attendeeIds?: string[] }).attendeeIds ?? [],
         }
       : undefined,
   });
@@ -65,6 +68,7 @@ export function ActivityForm({ tripId, onClose, existingActivity, moveToPlan }: 
       bookingRef: data.bookingRef || undefined,
       cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
       notes: data.notes || undefined,
+      attendeeIds: data.attendeeIds ?? [],
     };
     if (moveToPlan && existingActivity) {
       await promoteToPlan.mutateAsync({ entryId: existingActivity.id, type: 'activity', data: payload });
@@ -110,6 +114,13 @@ export function ActivityForm({ tripId, onClose, existingActivity, moveToPlan }: 
         <Input label="Booking ref" {...register('bookingRef')} />
       </div>
       <Input label="Cost ($)" type="number" step="0.01" min="0" {...register('cost')} />
+      <Controller
+        name="attendeeIds"
+        control={control}
+        render={({ field }) => (
+          <AttendeeSelect tripId={tripId} value={field.value ?? []} onChange={field.onChange} />
+        )}
+      />
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Notes</label>
         <textarea rows={2} className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" {...register('notes')} />

@@ -78,6 +78,20 @@ describe('createFlightSchema', () => {
   it('rejects notes over 1000 characters', () => {
     expect(createFlightSchema.safeParse({ ...valid, notes: 'x'.repeat(1001) }).success).toBe(false);
   });
+
+  it('accepts attendeeIds as array of strings', () => {
+    expect(createFlightSchema.safeParse({ ...valid, attendeeIds: ['user-1', 'user-2'] }).success).toBe(true);
+  });
+
+  it('defaults attendeeIds to [] when omitted', () => {
+    const result = createFlightSchema.safeParse(valid);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.attendeeIds).toEqual([]);
+  });
+
+  it('rejects non-string items in attendeeIds', () => {
+    expect(createFlightSchema.safeParse({ ...valid, attendeeIds: [123] }).success).toBe(false);
+  });
 });
 
 describe('createLodgingSchema', () => {
@@ -304,6 +318,10 @@ describe('createFlightIdeaSchema', () => {
     expect(
       createFlightIdeaSchema.safeParse({ type: 'flight', isIdea: true, arrivalCity: 'LAX' }).success,
     ).toBe(false);
+  });
+
+  it('accepts attendeeIds', () => {
+    expect(createFlightIdeaSchema.safeParse({ type: 'flight', isIdea: true, departureCity: 'NYC', arrivalCity: 'LAX', attendeeIds: ['user-1'] }).success).toBe(true);
   });
 });
 

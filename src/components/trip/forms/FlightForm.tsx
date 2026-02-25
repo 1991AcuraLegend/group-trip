@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +10,7 @@ import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEnt
 import type { Flight } from '@prisma/client';
 import { toDatetimeLocal, toISO } from './shared';
 import { getCityFromAirportCode } from '@/lib/airports';
+import { AttendeeSelect } from './AttendeeSelect';
 
 const schema = z.object({
   airline: z.string().min(1, 'Airline is required'),
@@ -23,6 +24,7 @@ const schema = z.object({
   confirmationNum: z.string().optional(),
   cost: z.coerce.number().nonnegative().optional().or(z.literal('')),
   notes: z.string().optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -33,7 +35,7 @@ export function FlightForm({ tripId, onClose, existingFlight, moveToPlan }: Prop
   const updateEntry = useUpdateEntry(tripId);
   const promoteToPlan = usePromoteToPlan(tripId);
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, watch, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: existingFlight
       ? {
@@ -48,6 +50,7 @@ export function FlightForm({ tripId, onClose, existingFlight, moveToPlan }: Prop
           confirmationNum: existingFlight.confirmationNum ?? '',
           cost: existingFlight.cost ?? undefined,
           notes: existingFlight.notes ?? '',
+          attendeeIds: (existingFlight as { attendeeIds?: string[] }).attendeeIds ?? [],
         }
       : undefined,
   });
@@ -97,6 +100,7 @@ export function FlightForm({ tripId, onClose, existingFlight, moveToPlan }: Prop
       confirmationNum: data.confirmationNum || undefined,
       cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
       notes: data.notes || undefined,
+      attendeeIds: data.attendeeIds ?? [],
     };
 
     if (moveToPlan && existingFlight) {
@@ -133,6 +137,13 @@ export function FlightForm({ tripId, onClose, existingFlight, moveToPlan }: Prop
         <Input label="Confirmation #" {...register('confirmationNum')} />
         <Input label="Cost ($)" type="number" step="0.01" min="0" {...register('cost')} />
       </div>
+      <Controller
+        name="attendeeIds"
+        control={control}
+        render={({ field }) => (
+          <AttendeeSelect tripId={tripId} value={field.value ?? []} onChange={field.onChange} />
+        )}
+      />
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Notes</label>
         <textarea rows={2} className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" {...register('notes')} />

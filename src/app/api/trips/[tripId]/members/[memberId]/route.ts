@@ -58,6 +58,16 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     }
 
     await prisma.tripMember.delete({ where: { id: memberId } });
+
+    const userId = target.userId;
+    await Promise.all([
+      prisma.$executeRaw`UPDATE "Flight" SET "attendeeIds" = array_remove("attendeeIds", ${userId}) WHERE "tripId" = ${tripId}`,
+      prisma.$executeRaw`UPDATE "Lodging" SET "attendeeIds" = array_remove("attendeeIds", ${userId}) WHERE "tripId" = ${tripId}`,
+      prisma.$executeRaw`UPDATE "CarRental" SET "attendeeIds" = array_remove("attendeeIds", ${userId}) WHERE "tripId" = ${tripId}`,
+      prisma.$executeRaw`UPDATE "Restaurant" SET "attendeeIds" = array_remove("attendeeIds", ${userId}) WHERE "tripId" = ${tripId}`,
+      prisma.$executeRaw`UPDATE "Activity" SET "attendeeIds" = array_remove("attendeeIds", ${userId}) WHERE "tripId" = ${tripId}`,
+    ]);
+
     return new NextResponse(null, { status: 204 });
   });
 }

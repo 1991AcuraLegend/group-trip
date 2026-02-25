@@ -3,6 +3,7 @@ import { z } from "zod";
 const baseEntryFields = {
   notes: z.string().max(1000).optional(),
   cost: z.number().nonnegative().optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
 };
 
 // ─── Plan entry schemas (dates required) ─────────────────────────────────────

@@ -6,6 +6,7 @@ import type { EntryType } from '@/types';
 import { ENTRY_LABELS } from '@/lib/constants';
 import { useDeleteEntry } from '@/hooks/useEntries';
 import { useEntryColors } from '@/hooks/useEntryColors';
+import { useMembers } from '@/hooks/useMembers';
 import { CardBody } from '@/components/trip/EntryDetails';
 
 type Props = {
@@ -24,6 +25,9 @@ export function EntryCard({ entry, type, tripId, canEdit, onEdit, isSelected, on
   const notes = (entry as { notes?: string | null }).notes;
   const entryColors = useEntryColors();
   const color = entryColors[type];
+  const { data: members } = useMembers(tripId);
+  const attendeeIds = (entry as { attendeeIds?: string[] }).attendeeIds ?? [];
+  const attendeeNames = attendeeIds.map((id) => members?.find((m) => m.userId === id)?.user.name).filter(Boolean) as string[];
 
   async function handleDelete() {
     if (!window.confirm(`Delete this ${ENTRY_LABELS[type].toLowerCase()}?`)) return;
@@ -41,6 +45,15 @@ export function EntryCard({ entry, type, tripId, canEdit, onEdit, isSelected, on
       <div className="p-2.5 sm:p-3 flex gap-2 sm:gap-3">
         <div className="flex-1 flex flex-col gap-1 min-w-0">
           <CardBody type={type} entry={entry} />
+          {attendeeNames.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {attendeeNames.map((name, i) => (
+                <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-ocean-50 text-ocean-700">
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
           {notes && (
             <div className="mt-1">
               <button
