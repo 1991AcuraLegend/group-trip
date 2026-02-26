@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { ServerInit } from "@/components/ServerInit";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const dmSerif = DM_Serif_Display({ weight: "400", subsets: ["latin"], variable: "--font-display" });
@@ -53,6 +54,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="bg-sand-50 text-sand-800 font-sans">
+        <ServerInit />
         <AuthProvider>
           <ThemeProvider>
             <QueryProvider>{children}</QueryProvider>

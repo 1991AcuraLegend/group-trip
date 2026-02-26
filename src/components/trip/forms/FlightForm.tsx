@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,6 +31,7 @@ type FormValues = z.infer<typeof schema>;
 type Props = { tripId: string; onClose: () => void; existingFlight?: Flight; moveToPlan?: boolean };
 
 export function FlightForm({ tripId, onClose, existingFlight, moveToPlan }: Props) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
   const promoteToPlan = usePromoteToPlan(tripId);
@@ -87,6 +88,7 @@ export function FlightForm({ tripId, onClose, existingFlight, moveToPlan }: Prop
   }, [arrivalAirport, setValue, watch]);
 
   async function onSubmit(data: FormValues) {
+    setSubmitError(null);
     const payload = {
       type: 'flight' as const,
       airline: data.airline,
@@ -103,20 +105,29 @@ export function FlightForm({ tripId, onClose, existingFlight, moveToPlan }: Prop
       attendeeIds: data.attendeeIds ?? [],
     };
 
-    if (moveToPlan && existingFlight) {
-      await promoteToPlan.mutateAsync({ entryId: existingFlight.id, type: 'flight', data: payload });
-    } else if (existingFlight) {
-      await updateEntry.mutateAsync({ entryId: existingFlight.id, type: 'flight', data: payload });
-    } else {
-      await createEntry.mutateAsync(payload);
+    try {
+      if (moveToPlan && existingFlight) {
+        await promoteToPlan.mutateAsync({ entryId: existingFlight.id, type: 'flight', data: payload });
+      } else if (existingFlight) {
+        await updateEntry.mutateAsync({ entryId: existingFlight.id, type: 'flight', data: payload });
+      } else {
+        await createEntry.mutateAsync(payload);
+      }
+      onClose();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to save flight');
     }
-    onClose();
   }
 
   const isLoading = createEntry.isPending || updateEntry.isPending || promoteToPlan.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+      {submitError && (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+          {submitError}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <Input label="Airline" error={errors.airline?.message} {...register('airline')} />
         <Input label="Flight number" {...register('flightNumber')} />

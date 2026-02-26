@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +11,7 @@ import { useCreateEntry, useUpdateEntry, usePromoteToPlan } from '@/hooks/useEnt
 import type { Activity } from '@prisma/client';
 import { toDateInput, toISO } from './shared';
 import { AttendeeSelect } from './AttendeeSelect';
+import { logger } from '@/lib/logger';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -30,6 +32,7 @@ type FormValues = z.infer<typeof schema>;
 type Props = { tripId: string; onClose: () => void; existingActivity?: Activity; moveToPlan?: boolean };
 
 export function ActivityForm({ tripId, onClose, existingActivity, moveToPlan }: Props) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
   const promoteToPlan = usePromoteToPlan(tripId);
@@ -51,10 +54,24 @@ export function ActivityForm({ tripId, onClose, existingActivity, moveToPlan }: 
           notes: existingActivity.notes ?? '',
           attendeeIds: (existingActivity as { attendeeIds?: string[] }).attendeeIds ?? [],
         }
-      : undefined,
+      : {
+          name: '',
+          address: '',
+          date: '',
+          startTime: '',
+          endTime: '',
+          lat: undefined as number | undefined,
+          lng: undefined as number | undefined,
+          category: '',
+          bookingRef: '',
+          cost: undefined as number | undefined,
+          notes: '',
+          attendeeIds: [] as string[],
+        },
   });
 
   async function onSubmit(data: FormValues) {
+    setSubmitError(null);
     const payload = {
       type: 'activity' as const,
       name: data.name,
@@ -70,20 +87,36 @@ export function ActivityForm({ tripId, onClose, existingActivity, moveToPlan }: 
       notes: data.notes || undefined,
       attendeeIds: data.attendeeIds ?? [],
     };
-    if (moveToPlan && existingActivity) {
-      await promoteToPlan.mutateAsync({ entryId: existingActivity.id, type: 'activity', data: payload });
-    } else if (existingActivity) {
-      await updateEntry.mutateAsync({ entryId: existingActivity.id, type: 'activity', data: payload });
-    } else {
-      await createEntry.mutateAsync(payload);
+    try {
+      logger.debug('ActivityForm', 'Form submission started', { tripId, action: existingActivity ? 'edit' : 'create', payload });
+      if (moveToPlan && existingActivity) {
+        logger.info('ActivityForm', 'Promoting idea to plan', { entryId: existingActivity.id });
+        await promoteToPlan.mutateAsync({ entryId: existingActivity.id, type: 'activity', data: payload });
+      } else if (existingActivity) {
+        logger.info('ActivityForm', 'Updating activity', { entryId: existingActivity.id });
+        await updateEntry.mutateAsync({ entryId: existingActivity.id, type: 'activity', data: payload });
+      } else {
+        logger.info('ActivityForm', 'Creating new activity', { tripId });
+        await createEntry.mutateAsync(payload);
+      }
+      logger.info('ActivityForm', 'Activity saved successfully');
+      onClose();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save activity';
+      logger.error('ActivityForm', 'Failed to save activity', { error: errorMessage });
+      setSubmitError(errorMessage);
     }
-    onClose();
   }
 
   const isLoading = createEntry.isPending || updateEntry.isPending || promoteToPlan.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+      {submitError && (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+          {submitError}
+        </div>
+      )}
       <Input label="Activity name" error={errors.name?.message} {...register('name')} />
       <Controller
         name="address"
@@ -102,8 +135,8 @@ export function ActivityForm({ tripId, onClose, existingActivity, moveToPlan }: 
           />
         )}
       />
-      <input type="hidden" {...register('lat', { valueAsNumber: true })} />
-      <input type="hidden" {...register('lng', { valueAsNumber: true })} />
+      <input type="hidden" {...register('lat', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })} />
+      <input type="hidden" {...register('lng', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })} />
       <div className="grid grid-cols-3 gap-3">
         <Input label="Date" type="date" error={errors.date?.message} {...register('date')} />
         <Input label="Start time" type="time" {...register('startTime')} />

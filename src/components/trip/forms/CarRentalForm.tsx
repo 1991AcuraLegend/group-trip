@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,6 +30,7 @@ type FormValues = z.infer<typeof schema>;
 type Props = { tripId: string; onClose: () => void; existingCarRental?: CarRental; moveToPlan?: boolean };
 
 export function CarRentalForm({ tripId, onClose, existingCarRental, moveToPlan }: Props) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
   const promoteToPlan = usePromoteToPlan(tripId);
@@ -49,10 +51,23 @@ export function CarRentalForm({ tripId, onClose, existingCarRental, moveToPlan }
           notes: existingCarRental.notes ?? '',
           attendeeIds: (existingCarRental as { attendeeIds?: string[] }).attendeeIds ?? [],
         }
-      : undefined,
+      : {
+          company: '',
+          pickupAddress: '',
+          dropoffAddress: '',
+          pickupDate: '',
+          dropoffDate: '',
+          pickupLat: undefined as number | undefined,
+          pickupLng: undefined as number | undefined,
+          confirmationNum: '',
+          cost: undefined as number | undefined,
+          notes: '',
+          attendeeIds: [] as string[],
+        },
   });
 
   async function onSubmit(data: FormValues) {
+    setSubmitError(null);
     const payload = {
       type: 'carRental' as const,
       company: data.company,
@@ -67,20 +82,29 @@ export function CarRentalForm({ tripId, onClose, existingCarRental, moveToPlan }
       notes: data.notes || undefined,
       attendeeIds: data.attendeeIds ?? [],
     };
-    if (moveToPlan && existingCarRental) {
-      await promoteToPlan.mutateAsync({ entryId: existingCarRental.id, type: 'carRental', data: payload });
-    } else if (existingCarRental) {
-      await updateEntry.mutateAsync({ entryId: existingCarRental.id, type: 'carRental', data: payload });
-    } else {
-      await createEntry.mutateAsync(payload);
+    try {
+      if (moveToPlan && existingCarRental) {
+        await promoteToPlan.mutateAsync({ entryId: existingCarRental.id, type: 'carRental', data: payload });
+      } else if (existingCarRental) {
+        await updateEntry.mutateAsync({ entryId: existingCarRental.id, type: 'carRental', data: payload });
+      } else {
+        await createEntry.mutateAsync(payload);
+      }
+      onClose();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to save car rental');
     }
-    onClose();
   }
 
   const isLoading = createEntry.isPending || updateEntry.isPending || promoteToPlan.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+      {submitError && (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+          {submitError}
+        </div>
+      )}
       <Input label="Rental company" error={errors.company?.message} {...register('company')} />
       <Controller
         name="pickupAddress"
@@ -113,8 +137,8 @@ export function CarRentalForm({ tripId, onClose, existingCarRental, moveToPlan }
           />
         )}
       />
-      <input type="hidden" {...register('pickupLat', { valueAsNumber: true })} />
-      <input type="hidden" {...register('pickupLng', { valueAsNumber: true })} />
+      <input type="hidden" {...register('pickupLat', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })} />
+      <input type="hidden" {...register('pickupLng', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })} />
       <div className="grid grid-cols-2 gap-3">
         <Input label="Pickup date & time" type="datetime-local" error={errors.pickupDate?.message} {...register('pickupDate')} />
         <Input label="Drop-off date & time" type="datetime-local" error={errors.dropoffDate?.message} {...register('dropoffDate')} />

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Flight, Lodging, CarRental, Restaurant, Activity } from '@prisma/client';
 import type { EntryType } from '@/types';
 import type { CreateEntryInput, CreateIdeaEntryInput } from '@/validators/entry';
+import { logger } from '@/lib/logger';
 
 export const entryKeys = {
   all: (tripId: string) => ['trips', tripId, 'entries'] as const,
@@ -45,15 +46,28 @@ export function useCreateEntry(tripId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: CreateEntryInput) => {
+      logger.debug('useCreateEntry', 'Sending create entry request', { tripId, type: data.type });
       const res = await fetch(`/api/trips/${tripId}/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error('Failed to create entry');
-      return res.json();
+      if (!res.ok) {
+        const errorText = await res.text();
+        logger.error('useCreateEntry', 'Create entry request failed', { status: res.status, error: errorText });
+        throw new Error('Failed to create entry');
+      }
+      const result = await res.json();
+      logger.info('useCreateEntry', 'Entry created successfully', { entryId: result.data?.id, type: data.type });
+      return result;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: entryKeys.all(tripId) }),
+    onSuccess: () => {
+      logger.debug('useCreateEntry', 'Invalidating entries cache', { tripId });
+      queryClient.invalidateQueries({ queryKey: entryKeys.all(tripId) });
+    },
+    onError: (error) => {
+      logger.error('useCreateEntry', 'Mutation error', { error: error instanceof Error ? error.message : String(error) });
+    },
   });
 }
 
@@ -85,15 +99,28 @@ export function useUpdateEntry(tripId: string) {
       type: EntryType;
       data: Record<string, unknown>;
     }) => {
+      logger.debug('useUpdateEntry', 'Sending update entry request', { tripId, entryId, type });
       const res = await fetch(`/api/trips/${tripId}/entries/${entryId}?type=${type}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error('Failed to update entry');
-      return res.json();
+      if (!res.ok) {
+        const errorText = await res.text();
+        logger.error('useUpdateEntry', 'Update entry request failed', { status: res.status, entryId, error: errorText });
+        throw new Error('Failed to update entry');
+      }
+      const result = await res.json();
+      logger.info('useUpdateEntry', 'Entry updated successfully', { entryId, type });
+      return result;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: entryKeys.all(tripId) }),
+    onSuccess: () => {
+      logger.debug('useUpdateEntry', 'Invalidating entries cache', { tripId });
+      queryClient.invalidateQueries({ queryKey: entryKeys.all(tripId) });
+    },
+    onError: (error) => {
+      logger.error('useUpdateEntry', 'Mutation error', { error: error instanceof Error ? error.message : String(error) });
+    },
   });
 }
 
@@ -110,17 +137,28 @@ export function usePromoteToPlan(tripId: string) {
       type: EntryType;
       data: Record<string, unknown>;
     }) => {
+      logger.debug('usePromoteToPlan', 'Promoting idea to plan', { tripId, entryId, type });
       const res = await fetch(`/api/trips/${tripId}/entries/${entryId}?type=${type}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, isIdea: false }),
       });
-      if (!res.ok) throw new Error('Failed to promote idea to plan');
-      return res.json();
+      if (!res.ok) {
+        const errorText = await res.text();
+        logger.error('usePromoteToPlan', 'Promote request failed', { status: res.status, entryId, error: errorText });
+        throw new Error('Failed to promote idea to plan');
+      }
+      const result = await res.json();
+      logger.info('usePromoteToPlan', 'Idea promoted to plan successfully', { entryId, type });
+      return result;
     },
     onSuccess: () => {
+      logger.debug('usePromoteToPlan', 'Invalidating both entries and ideas caches', { tripId });
       queryClient.invalidateQueries({ queryKey: entryKeys.all(tripId) });
       queryClient.invalidateQueries({ queryKey: entryKeys.ideas(tripId) });
+    },
+    onError: (error) => {
+      logger.error('usePromoteToPlan', 'Mutation error', { error: error instanceof Error ? error.message : String(error) });
     },
   });
 }

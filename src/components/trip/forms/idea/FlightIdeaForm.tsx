@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,6 +23,7 @@ type FormValues = z.infer<typeof schema>;
 type Props = { tripId: string; onClose: () => void; existingIdea?: Flight };
 
 export function FlightIdeaForm({ tripId, onClose, existingIdea }: Props) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const createIdea = useCreateIdea(tripId);
   const updateEntry = useUpdateEntry(tripId);
 
@@ -38,38 +40,48 @@ export function FlightIdeaForm({ tripId, onClose, existingIdea }: Props) {
   });
 
   async function onSubmit(data: FormValues) {
-    if (existingIdea) {
-      await updateEntry.mutateAsync({
-        entryId: existingIdea.id,
-        type: 'flight',
-        data: {
+    setSubmitError(null);
+    try {
+      if (existingIdea) {
+        await updateEntry.mutateAsync({
+          entryId: existingIdea.id,
+          type: 'flight',
+          data: {
+            departureCity: data.departureCity,
+            arrivalCity: data.arrivalCity,
+            airline: data.airline || undefined,
+            cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
+            notes: data.notes || undefined,
+            attendeeIds: data.attendeeIds ?? [],
+          },
+        });
+      } else {
+        await createIdea.mutateAsync({
+          type: 'flight',
+          isIdea: true,
           departureCity: data.departureCity,
           arrivalCity: data.arrivalCity,
-          airline: data.airline || undefined,
+          airline: data.airline ?? '',
           cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
           notes: data.notes || undefined,
           attendeeIds: data.attendeeIds ?? [],
-        },
-      });
-    } else {
-      await createIdea.mutateAsync({
-        type: 'flight',
-        isIdea: true,
-        departureCity: data.departureCity,
-        arrivalCity: data.arrivalCity,
-        airline: data.airline ?? '',
-        cost: data.cost !== '' && data.cost !== undefined ? Number(data.cost) : undefined,
-        notes: data.notes || undefined,
-        attendeeIds: data.attendeeIds ?? [],
-      });
+        });
+      }
+      onClose();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to save flight idea');
     }
-    onClose();
   }
 
   const isLoading = createIdea.isPending || updateEntry.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+      {submitError && (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+          {submitError}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <Input label="From (city)" placeholder="Paris" error={errors.departureCity?.message} {...register('departureCity')} />
         <Input label="To (city)" placeholder="New York" error={errors.arrivalCity?.message} {...register('arrivalCity')} />

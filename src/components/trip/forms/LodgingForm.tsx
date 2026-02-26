@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -28,6 +29,7 @@ type FormValues = z.infer<typeof schema>;
 type Props = { tripId: string; onClose: () => void; existingLodging?: Lodging; moveToPlan?: boolean };
 
 export function LodgingForm({ tripId, onClose, existingLodging, moveToPlan }: Props) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const createEntry = useCreateEntry(tripId);
   const updateEntry = useUpdateEntry(tripId);
   const promoteToPlan = usePromoteToPlan(tripId);
@@ -47,10 +49,22 @@ export function LodgingForm({ tripId, onClose, existingLodging, moveToPlan }: Pr
           notes: existingLodging.notes ?? '',
           attendeeIds: (existingLodging as { attendeeIds?: string[] }).attendeeIds ?? [],
         }
-      : undefined,
+      : {
+          name: '',
+          address: '',
+          checkIn: '',
+          checkOut: '',
+          lat: undefined as number | undefined,
+          lng: undefined as number | undefined,
+          confirmationNum: '',
+          cost: undefined as number | undefined,
+          notes: '',
+          attendeeIds: [] as string[],
+        },
   });
 
   async function onSubmit(data: FormValues) {
+    setSubmitError(null);
     const payload = {
       type: 'lodging' as const,
       name: data.name,
@@ -64,20 +78,29 @@ export function LodgingForm({ tripId, onClose, existingLodging, moveToPlan }: Pr
       notes: data.notes || undefined,
       attendeeIds: data.attendeeIds ?? [],
     };
-    if (moveToPlan && existingLodging) {
-      await promoteToPlan.mutateAsync({ entryId: existingLodging.id, type: 'lodging', data: payload });
-    } else if (existingLodging) {
-      await updateEntry.mutateAsync({ entryId: existingLodging.id, type: 'lodging', data: payload });
-    } else {
-      await createEntry.mutateAsync(payload);
+    try {
+      if (moveToPlan && existingLodging) {
+        await promoteToPlan.mutateAsync({ entryId: existingLodging.id, type: 'lodging', data: payload });
+      } else if (existingLodging) {
+        await updateEntry.mutateAsync({ entryId: existingLodging.id, type: 'lodging', data: payload });
+      } else {
+        await createEntry.mutateAsync(payload);
+      }
+      onClose();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to save lodging');
     }
-    onClose();
   }
 
   const isLoading = createEntry.isPending || updateEntry.isPending || promoteToPlan.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+      {submitError && (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+          {submitError}
+        </div>
+      )}
       <Input label="Hotel / lodging name" error={errors.name?.message} {...register('name')} />
       <Controller
         name="address"
@@ -97,8 +120,8 @@ export function LodgingForm({ tripId, onClose, existingLodging, moveToPlan }: Pr
           />
         )}
       />
-      <input type="hidden" {...register('lat', { valueAsNumber: true })} />
-      <input type="hidden" {...register('lng', { valueAsNumber: true })} />
+      <input type="hidden" {...register('lat', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })} />
+      <input type="hidden" {...register('lng', { setValueAs: (v) => (v === '' || v == null) ? undefined : Number(v) })} />
       <div className="grid grid-cols-2 gap-3">
         <Input label="Check-in" type="datetime-local" error={errors.checkIn?.message} {...register('checkIn')} />
         <Input label="Check-out" type="datetime-local" error={errors.checkOut?.message} {...register('checkOut')} />

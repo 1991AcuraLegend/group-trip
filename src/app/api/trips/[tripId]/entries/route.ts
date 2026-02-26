@@ -30,11 +30,13 @@ export async function POST(request: NextRequest, { params }: Params) {
   const { tripId } = params;
   return withTripAuth(tripId, 'COLLABORATOR', async ({ session }) => {
     const body = await request.json();
+    console.log(`[${new Date().toISOString()}] [INFO] POST /api/trips/${tripId}/entries - Starting entry creation`, { type: body.type, isIdea: body.isIdea, userId: session.user.id });
 
     // Route to idea schema when isIdea: true
     if (body.isIdea === true) {
       const result = createIdeaEntrySchema.safeParse(body);
       if (!result.success) {
+        console.error(`[${new Date().toISOString()}] [ERROR] Idea entry validation failed`, { errors: result.error.flatten().fieldErrors });
         return NextResponse.json({ error: result.error.flatten().fieldErrors }, { status: 400 });
       }
       const { type, ...data } = result.data;
@@ -42,11 +44,13 @@ export async function POST(request: NextRequest, { params }: Params) {
       const entry = await config.delegate(prisma).create({
         data: { ...data, tripId, createdById: session.user.id },
       });
+      console.log(`[${new Date().toISOString()}] [INFO] Idea entry created successfully`, { entryId: entry.id, type });
       return NextResponse.json({ type, data: entry }, { status: 201 });
     }
 
     const result = createEntrySchema.safeParse(body);
     if (!result.success) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Entry validation failed`, { errors: result.error.flatten().fieldErrors, type: body.type });
       return NextResponse.json({ error: result.error.flatten().fieldErrors }, { status: 400 });
     }
 
@@ -56,6 +60,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     const entry = await config.delegate(prisma).create({
       data: { ...converted, tripId, createdById: session.user.id },
     });
+    console.log(`[${new Date().toISOString()}] [INFO] Plan entry created successfully`, { entryId: entry.id, type, tripId });
     return NextResponse.json({ type, data: entry }, { status: 201 });
   });
 }
