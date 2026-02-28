@@ -35,9 +35,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - uploads_data:/app/public/uploads
     networks:
       - travelplanner
     restart: unless-stopped
+
+  # Cloudflare Tunnel (optional - comment out if not using tunnel)
+  # tunnel:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: travelplanner-tunnel
+  #   command: tunnel run
+  #   environment:
+  #     CLOUDFLARE_DNS_TOKEN: ${CLOUDFLARE_TOKEN}
+  #   depends_on:
+  #     app:
+  #       condition: service_started
+  #   networks:
+  #     - travelplanner
+  #   restart: unless-stopped
 
 networks:
   travelplanner:
@@ -45,3 +61,4 @@ networks:
 
 volumes:
   postgres_data:
+  uploads_data:

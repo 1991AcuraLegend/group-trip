@@ -32,8 +32,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    console.error("[REGISTER] Error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: (error as any)?.message || String(error) },
       { status: 500 }
     );
   }
