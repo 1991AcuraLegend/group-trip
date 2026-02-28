@@ -20,7 +20,7 @@ fi
 # ── Start Docker Compose ───────────────────────────────────────────────────────
 echo "==> Starting TravelPlanner via Docker Compose..."
 cd "$DIR"
-docker-compose --env-file "$ENV_FILE" up -d
+docker-compose --env-file "$ENV_FILE" up -d --build
 
 echo ""
 echo "  TravelPlanner is running at http://localhost:3000"
