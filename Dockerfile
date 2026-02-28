@@ -44,6 +44,9 @@ RUN npx prisma generate
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
+# Create uploads directory if it doesn't exist and ensure it's writable
+RUN mkdir -p /app/public/uploads && chmod 755 /app/public/uploads
+
 # Expose port
 EXPOSE 3000
 
@@ -51,5 +54,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
-# Start Next.js in production mode
-CMD ["npm", "start"]
+# Start by running migrations, then Next.js in production mode
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
