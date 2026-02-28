@@ -16,7 +16,8 @@
       "Bash(python3 -m skills.codebase_analysis.analyze --step 1)",
       "Bash(head -60 /Users/cbesmer/1991acuralegend/group-trip/src/app/api/trips/[tripId]/route.ts)",
       "Bash(/Users/cbesmer/1991acuralegend/group-trip/node_modules/.bin/next --version)",
-      "Bash(/Users/cbesmer/1991acuralegend/group-trip/node_modules/.bin/tsc --noEmit)"
+      "Bash(/Users/cbesmer/1991acuralegend/group-trip/node_modules/.bin/tsc --noEmit)",
+      "Bash(npx vitest:*)"
     ]
   }
 }

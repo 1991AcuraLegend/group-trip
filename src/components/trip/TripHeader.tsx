@@ -99,6 +99,11 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
                 Edit Trip
               </Button>
             )}
+            <Link href={`/trips/${trip.id}/costs`}>
+              <Button variant="secondary" size="sm">
+                Cost Breakdown
+              </Button>
+            </Link>
             <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
               Share
             </Button>
