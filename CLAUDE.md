@@ -7,14 +7,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev          # Next.js dev server (port 3000)
 npm run build        # Production build
+npm run start        # Production server (after build)
 npm run lint         # ESLint via Next.js
 npm run test         # Vitest (jsdom, globals: true)
-npm run test:e2e     # Playwright (Chromium, needs dev server)
+npx vitest run src/path/to/file.test.ts   # Run a single test file
+npm run test:e2e     # Playwright (Chromium, needs dev server running)
 npx prisma migrate dev   # Run Prisma migrations
 npx prisma studio        # Open Prisma GUI
 ```
 
 `postinstall` runs `prisma generate` automatically. Path alias: `@/*` → `./src/*`.
+
+**Required env vars** (`.env.local`):
+```
+DATABASE_URL="postgresql://user:password@localhost:5432/travelplanner"
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
 ## Architecture
 
