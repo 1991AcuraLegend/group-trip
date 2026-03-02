@@ -37,9 +37,6 @@ COPY prisma ./prisma/
 # Install production dependencies only
 RUN npm ci --omit=dev
 
-# Generate Prisma client for runtime
-RUN npx prisma generate
-
 # Copy built application from builder
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
