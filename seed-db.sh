@@ -1,9 +1,47 @@
 #!/bin/bash
 
 # seed-db.sh - Populate the database with test data
-# Usage: ./seed-db.sh
+# Usage: ./seed-db.sh --force [--allow-production]
 
 set -e
+
+FORCE=false
+ALLOW_PRODUCTION=false
+
+for arg in "$@"; do
+    case "$arg" in
+        --force)
+            FORCE=true
+            ;;
+        --allow-production)
+            ALLOW_PRODUCTION=true
+            ;;
+        -h|--help)
+            echo "Usage: ./seed-db.sh --force [--allow-production]"
+            echo ""
+            echo "  --force             Required. Prevents accidental data changes."
+            echo "  --allow-production  Required in addition to --force when NODE_ENV=production."
+            exit 0
+            ;;
+        *)
+            echo "❌ Unknown option: $arg"
+            echo "Usage: ./seed-db.sh --force [--allow-production]"
+            exit 1
+            ;;
+    esac
+done
+
+if [ "$FORCE" != "true" ]; then
+    echo "❌ Refusing to seed without explicit confirmation."
+    echo "   Re-run with: ./seed-db.sh --force"
+    exit 1
+fi
+
+if [ "${NODE_ENV:-}" = "production" ] && [ "$ALLOW_PRODUCTION" != "true" ]; then
+    echo "❌ NODE_ENV=production detected."
+    echo "   Re-run with: ./seed-db.sh --force --allow-production"
+    exit 1
+fi
 
 echo "🌱 Database Seeding Script"
 echo "=========================="

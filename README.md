@@ -86,6 +86,20 @@ A collaborative web application for planning group travel together. Create trips
   npm run lint
   ```
 
+### Seed Data (safe by default)
+
+The seed script is intentionally guarded to prevent accidental data changes.
+
+- Local/dev seed:
+  ```bash
+  ./seed-db.sh --force
+  ```
+
+- Production environments require an additional explicit flag:
+  ```bash
+  NODE_ENV=production ./seed-db.sh --force --allow-production
+  ```
+
 ## 🏗️ Tech Stack
 
 | Layer | Technology |
