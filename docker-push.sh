@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # Configuration
-GHCR_USERNAME="1991AcuraLegend"
+GHCR_USERNAME="1991acuralegend"
 REPO_NAME="group-trip"
 IMAGE_TAG="latest"
 IMAGE_NAME="ghcr.io/${GHCR_USERNAME}/${REPO_NAME}:${IMAGE_TAG}"
@@ -27,7 +27,7 @@ fi
 # ── Build the image ────────────────────────────────────────────────────────────
 echo "📦 Building Docker image..."
 cd "$DIR"
-docker build -t "${IMAGE_NAME}" .
+docker build --no-cache -t "${IMAGE_NAME}" .
 
 if [[ $? -ne 0 ]]; then
   echo "❌ Build failed."

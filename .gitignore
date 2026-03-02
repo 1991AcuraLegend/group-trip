@@ -53,3 +53,4 @@ start.sh
 stop.sh
 .tunnel.log
 .tunnel.pid
+docker-compose.deploy.yml

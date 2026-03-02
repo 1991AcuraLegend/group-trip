@@ -23,7 +23,7 @@ export default function DashboardPage() {
             <Link href="/settings">
               <Button variant="secondary" size="sm">Settings</Button>
             </Link>
-            <Button variant="secondary" size="sm" onClick={() => signOut()}>Sign Out</Button>
+            <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: '/' })}>Sign Out</Button>
           </div>
         </div>
 
