@@ -50,5 +50,23 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Allow relative URLs
+      if (url.startsWith("/")) return url;
+      
+      // Allow any HTTPS URL in production (safer than localhost)
+      try {
+        const callbackUrl = new URL(url);
+        // Allow HTTPS URLs (production) or localhost (development)
+        if (callbackUrl.protocol === 'https:' || callbackUrl.hostname === 'localhost' || callbackUrl.hostname === '127.0.0.1') {
+          return url;
+        }
+      } catch (e) {
+        // Invalid URL, fall through to default
+      }
+      
+      // Default to baseUrl (homepage)
+      return baseUrl;
+    },
   },
 };
