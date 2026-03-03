@@ -8,6 +8,7 @@ import type { Trip } from '@prisma/client';
 import { Button } from '@/components/ui/Button';
 import { ShareModal } from '@/components/sharing/ShareModal';
 import { EditTripModal } from '@/components/trip/EditTripModal';
+import { ExportTripModal } from '@/components/trip/ExportTripModal';
 import { TripHeaderMenu } from '@/components/trip/TripHeaderMenu';
 import { useDeleteTrip } from '@/hooks/useTrips';
 
@@ -62,6 +63,7 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
   const deleteTrip = useDeleteTrip();
   const [shareOpen, setShareOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const isOwner = session?.user?.id === trip.ownerId;
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
@@ -101,6 +103,7 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
                 isOwner={isOwner}
                 onEditTrip={() => setEditOpen(true)}
                 costBreakdownHref={`/trips/${trip.id}/costs`}
+                onExport={() => setExportOpen(true)}
                 onShare={() => setShareOpen(true)}
                 onDelete={handleDelete}
                 isDeleting={deleteTrip.isPending}
@@ -118,6 +121,9 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
                   Cost Breakdown
                 </Button>
               </Link>
+              <Button variant="secondary" size="sm" onClick={() => setExportOpen(true)}>
+                Export
+              </Button>
               <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
                 Share
               </Button>
@@ -166,6 +172,12 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
           onClose={() => setEditOpen(false)}
         />
       )}
+      <ExportTripModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        trip={trip}
+        tripId={trip.id}
+      />
     </header>
   );
 }

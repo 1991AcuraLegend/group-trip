@@ -76,6 +76,26 @@ export function useDeleteTrip() {
   });
 }
 
+export function useImportTrip() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: unknown) => {
+      const res = await fetch('/api/trips/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const msg = body?.error?.formErrors?.[0] || body?.error || 'Failed to import trip';
+        throw new Error(typeof msg === 'string' ? msg : 'Invalid trip data');
+      }
+      return res.json() as Promise<{ tripId: string }>;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+  });
+}
+
 export function useUploadImage() {
   return useMutation({
     mutationFn: async (file: File) => {

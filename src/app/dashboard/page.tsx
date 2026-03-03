@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { TripGrid } from '@/components/dashboard/TripGrid';
 import { CreateTripModal } from '@/components/dashboard/CreateTripModal';
+import { ImportTripModal } from '@/components/dashboard/ImportTripModal';
 import { DashboardMenu } from '@/components/dashboard/DashboardMenu';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const [showModal, setShowModal] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const { data: session } = useSession();
 
   return (
@@ -38,12 +40,16 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-bold font-display text-ocean-900">My Trips</h1>
-          <Button onClick={() => setShowModal(true)}>+ Create Trip</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={() => setImportOpen(true)}>Import Trip</Button>
+            <Button onClick={() => setShowModal(true)}>+ Create Trip</Button>
+          </div>
         </div>
 
         <TripGrid onCreateTrip={() => setShowModal(true)} />
 
         <CreateTripModal isOpen={showModal} onClose={() => setShowModal(false)} />
+        <ImportTripModal isOpen={importOpen} onClose={() => setImportOpen(false)} />
       </div>
     </div>
   );
