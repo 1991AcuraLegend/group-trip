@@ -8,7 +8,9 @@ export const createTripSchema = z.object({
   coverImage: z.string().optional(),
 });
 
-export const updateTripSchema = createTripSchema.partial();
+export const updateTripSchema = createTripSchema.partial().extend({
+  coverImage: z.string().nullable().optional(),
+});
 
 export type CreateTripInput = z.infer<typeof createTripSchema>;
 export type UpdateTripInput = z.infer<typeof updateTripSchema>;

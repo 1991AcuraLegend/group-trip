@@ -43,12 +43,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       );
     }
 
+    const { coverImage, ...rest } = result.data;
     const trip = await prisma.trip.update({
       where: { id: tripId },
       data: {
-        ...result.data,
-        startDate: result.data.startDate ? new Date(result.data.startDate) : undefined,
-        endDate: result.data.endDate ? new Date(result.data.endDate) : undefined,
+        ...rest,
+        startDate: rest.startDate ? new Date(rest.startDate) : undefined,
+        endDate: rest.endDate ? new Date(rest.endDate) : undefined,
+        ...(coverImage !== undefined ? { coverImage } : {}),
       },
     });
 
