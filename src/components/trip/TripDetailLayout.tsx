@@ -50,7 +50,7 @@ export function TripDetailLayout({ tripId }: Props) {
     : undefined;
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="fixed inset-0 flex flex-col">
       <TripHeader trip={trip} memberCount={memberCount} entryCount={entryCount} />
 
       {/* Split view */}

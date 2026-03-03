@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { TripGrid } from '@/components/dashboard/TripGrid';
 import { CreateTripModal } from '@/components/dashboard/CreateTripModal';
+import { DashboardMenu } from '@/components/dashboard/DashboardMenu';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
@@ -20,10 +21,17 @@ export default function DashboardPage() {
             Where are we going today, {session?.user?.name}?
           </h2>
           <div className="flex items-center gap-2">
-            <Link href="/settings">
-              <Button variant="secondary" size="sm">Settings</Button>
-            </Link>
-            <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: `${window.location.origin}/` })}>Sign Out</Button>
+            {/* Mobile: kebab menu */}
+            <div className="lg:hidden">
+              <DashboardMenu />
+            </div>
+            {/* Desktop: inline buttons */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Link href="/settings">
+                <Button variant="secondary" size="sm">Settings</Button>
+              </Link>
+              <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: `${window.location.origin}/` })}>Sign Out</Button>
+            </div>
           </div>
         </div>
 

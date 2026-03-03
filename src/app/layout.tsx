@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/providers/AuthProvider";
@@ -12,6 +12,13 @@ const dmSerif = DM_Serif_Display({ weight: "400", subsets: ["latin"], variable: 
 export const metadata: Metadata = {
   title: "TravelPlanner",
   description: "Plan your trips collaboratively",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 // Inline script prevents flash of Coastal theme when Y2K is stored in localStorage.

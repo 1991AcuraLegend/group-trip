@@ -8,6 +8,7 @@ import type { Trip } from '@prisma/client';
 import { Button } from '@/components/ui/Button';
 import { ShareModal } from '@/components/sharing/ShareModal';
 import { EditTripModal } from '@/components/trip/EditTripModal';
+import { TripHeaderMenu } from '@/components/trip/TripHeaderMenu';
 import { useDeleteTrip } from '@/hooks/useTrips';
 
 type Props = {
@@ -94,29 +95,43 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
           </Link>
 
           <div className="flex items-center gap-2 shrink-0 sm:order-last">
-            {isOwner && (
-              <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
-                Edit Trip
+            {/* Mobile: kebab menu */}
+            <div className="lg:hidden">
+              <TripHeaderMenu
+                isOwner={isOwner}
+                onEditTrip={() => setEditOpen(true)}
+                costBreakdownHref={`/trips/${trip.id}/costs`}
+                onShare={() => setShareOpen(true)}
+                onDelete={handleDelete}
+                isDeleting={deleteTrip.isPending}
+              />
+            </div>
+            {/* Desktop: inline buttons */}
+            <div className="hidden lg:flex items-center gap-2">
+              {isOwner && (
+                <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
+                  Edit Trip
+                </Button>
+              )}
+              <Link href={`/trips/${trip.id}/costs`}>
+                <Button variant="secondary" size="sm">
+                  Cost Breakdown
+                </Button>
+              </Link>
+              <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
+                Share
               </Button>
-            )}
-            <Link href={`/trips/${trip.id}/costs`}>
-              <Button variant="secondary" size="sm">
-                Cost Breakdown
-              </Button>
-            </Link>
-            <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
-              Share
-            </Button>
-            {isOwner && (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleDelete}
-                loading={deleteTrip.isPending}
-              >
-                Delete
-              </Button>
-            )}
+              {isOwner && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleDelete}
+                  loading={deleteTrip.isPending}
+                >
+                  Delete
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
