@@ -13,11 +13,11 @@ import { ENTRY_LABELS } from '@/lib/constants';
 
 type AnyEntry = Flight | Lodging | CarRental | Restaurant | Activity;
 
-type Props = { tripId: string; canEdit: boolean; selectedEntryId: string | null; onSelectEntry: (entryId: string | null) => void };
+type Props = { tripId: string; canEdit: boolean; selectedEntryId: string | null; onSelectEntry: (entryId: string | null) => void; naturalScroll?: boolean };
 
 const TAB_ORDER: EntryType[] = ['flight', 'lodging', 'carRental', 'restaurant', 'activity'];
 
-export function EntryPanel({ tripId, canEdit, selectedEntryId, onSelectEntry }: Props) {
+export function EntryPanel({ tripId, canEdit, selectedEntryId, onSelectEntry, naturalScroll }: Props) {
   const { data: entries, isLoading, error } = useEntries(tripId);
   const [activeTab, setActiveTab] = useState<EntryType>('flight');
   const [createOpen, setCreateOpen] = useState(false);
@@ -65,7 +65,7 @@ export function EntryPanel({ tripId, canEdit, selectedEntryId, onSelectEntry }: 
   }
 
   return (
-    <div className="flex h-full w-full min-w-0 flex-col bg-white">
+    <div className={`flex ${naturalScroll ? '' : 'h-full'} w-full min-w-0 flex-col bg-white`}>
       <div className="flex items-stretch">
         <div className="flex-1 min-w-0">
           <Tabs tabs={tabs} activeTab={activeTab} onChange={(v) => setActiveTab(v as EntryType)} />
@@ -82,7 +82,7 @@ export function EntryPanel({ tripId, canEdit, selectedEntryId, onSelectEntry }: 
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className={naturalScroll ? 'p-4' : 'flex-1 overflow-y-auto p-4'}>
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 3 }).map((_, i) => (

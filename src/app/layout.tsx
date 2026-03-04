@@ -12,6 +12,9 @@ const dmSerif = DM_Serif_Display({ weight: "400", subsets: ["latin"], variable: 
 export const metadata: Metadata = {
   title: "TravelPlanner",
   description: "Plan your trips collaboratively",
+  icons: {
+    icon: "/TravelPlannerIcon.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -58,6 +61,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
       <head>
+        <link rel="icon" href="/TravelPlannerIcon.png" type="image/png" />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="bg-sand-50 text-sand-800 font-sans">

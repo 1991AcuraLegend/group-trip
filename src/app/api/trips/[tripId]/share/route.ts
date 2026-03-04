@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withTripAuth } from '@/lib/auth-helpers';
 import { generateShareCode } from '@/lib/share-codes';
+import { getBaseUrl } from '@/lib/base-url';
 import type { MemberRole } from '@prisma/client';
 
 type Params = { params: { tripId: string } };
 
-const baseUrl = process.env.NEXTAUTH_URL || 'https://grouptravel.cbesmer.com';
-
 export async function GET(_request: NextRequest, { params }: Params) {
   const { tripId } = params;
   return withTripAuth(tripId, 'VIEWER', async ({ membership }) => {
+    const baseUrl = getBaseUrl();
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
       include: { _count: { select: { members: true } } },
@@ -46,6 +46,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
 export async function POST(request: NextRequest, { params }: Params) {
   const { tripId } = params;
   return withTripAuth(tripId, 'OWNER', async () => {
+    const baseUrl = getBaseUrl();
     const body = await request.json().catch(() => ({}));
     const shareRole: MemberRole = body?.role === 'VIEWER' ? 'VIEWER' : 'COLLABORATOR';
 

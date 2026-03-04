@@ -1,27 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import Image from 'next/image';
 import { TripGrid } from '@/components/dashboard/TripGrid';
 import { CreateTripModal } from '@/components/dashboard/CreateTripModal';
-import { ImportTripModal } from '@/components/dashboard/ImportTripModal';
 import { DashboardMenu } from '@/components/dashboard/DashboardMenu';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const [showModal, setShowModal] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const { data: session } = useSession();
+
+  const handleOpenModal = useCallback(() => setShowModal(true), []);
+  const handleCloseModal = useCallback(() => setShowModal(false), []);
 
   return (
     <div className="min-h-screen bg-sand-50">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* Top header with greeting and sign out */}
+        {/* Top header with icon, greeting and sign out */}
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-ocean-800">
-            Where are we going today, {session?.user?.name}?
-          </h2>
+          <div className="flex items-center gap-4">
+            <Image
+              src="/TravelPlannerIcon.png"
+              alt="TravelPlanner"
+              width={40}
+              height={40}
+              className="w-10 h-10"
+            />
+            <div className="flex flex-col text-left">
+              <h2 className="text-lg md:text-xl font-semibold text-ocean-800">
+                Where are we going today,
+              </h2>
+              <h2 className="text-lg md:text-xl font-semibold text-ocean-800">
+                {session?.user?.name}?
+              </h2>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             {/* Mobile: kebab menu */}
             <div className="lg:hidden">
@@ -40,16 +56,12 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-bold font-display text-ocean-900">My Trips</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={() => setImportOpen(true)}>Import Trip</Button>
-            <Button onClick={() => setShowModal(true)}>+ Create Trip</Button>
-          </div>
+          <Button onClick={handleOpenModal}>+ Create Trip</Button>
         </div>
 
-        <TripGrid onCreateTrip={() => setShowModal(true)} />
+        <TripGrid onCreateTrip={handleOpenModal} />
 
-        <CreateTripModal isOpen={showModal} onClose={() => setShowModal(false)} />
-        <ImportTripModal isOpen={importOpen} onClose={() => setImportOpen(false)} />
+        <CreateTripModal isOpen={showModal} onClose={handleCloseModal} />
       </div>
     </div>
   );

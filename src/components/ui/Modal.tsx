@@ -12,32 +12,42 @@ type Props = {
 
 export function Modal({ isOpen, onClose, title, children }: Props) {
   const firstFocusableRef = useRef<HTMLElement | null>(null);
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      hasInitializedRef.current = false;
+      return;
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
+    // Don't disable body scroll - allow background scrolling on mobile
 
-    // Focus first focusable element
-    const timer = setTimeout(() => {
-      const focusable = document.querySelector<HTMLElement>(
-        '[data-modal] button, [data-modal] input, [data-modal] textarea, [data-modal] select'
-      );
-      if (focusable) {
-        firstFocusableRef.current = focusable;
-        focusable.focus();
-      }
-    }, 10);
+    // Focus first focusable element only once when modal opens
+    if (!hasInitializedRef.current) {
+      const timer = setTimeout(() => {
+        const focusable = document.querySelector<HTMLElement>(
+          '[data-modal] button, [data-modal] input, [data-modal] textarea, [data-modal] select'
+        );
+        if (focusable) {
+          firstFocusableRef.current = focusable;
+          focusable.focus();
+        }
+      }, 10);
+      hasInitializedRef.current = true;
+
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        clearTimeout(timer);
+      };
+    }
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-      clearTimeout(timer);
     };
   }, [isOpen, onClose]);
 
@@ -51,12 +61,12 @@ export function Modal({ isOpen, onClose, title, children }: Props) {
       <div className="absolute inset-0 bg-ocean-900/40 backdrop-blur-sm" aria-hidden="true" />
       <div
         data-modal
-        className="glass relative z-10 w-full max-w-lg rounded-2xl border border-sand-200 bg-white shadow-xl animate-fade-in-up"
+        className="glass relative z-10 w-full max-w-lg rounded-2xl border border-sand-200 bg-white shadow-xl animate-fade-in-up max-h-[90vh] flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        <div className="flex items-center justify-between border-b px-6 py-4">
+        <div className="flex items-center justify-between border-b px-6 py-4 flex-shrink-0">
           <h2 id="modal-title" className="text-lg font-semibold font-display text-gray-900">
             {title}
           </h2>
@@ -70,7 +80,7 @@ export function Modal({ isOpen, onClose, title, children }: Props) {
             </svg>
           </button>
         </div>
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-6 py-4 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>,
     document.body

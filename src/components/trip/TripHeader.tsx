@@ -11,11 +11,14 @@ import { EditTripModal } from '@/components/trip/EditTripModal';
 import { ExportTripModal } from '@/components/trip/ExportTripModal';
 import { TripHeaderMenu } from '@/components/trip/TripHeaderMenu';
 import { useDeleteTrip } from '@/hooks/useTrips';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 type Props = {
   trip: Trip & { _count?: { members: number } };
   memberCount: number;
   entryCount?: number;
+  mobileView?: 'map' | 'planner';
+  onMobileViewChange?: (view: 'map' | 'planner') => void;
 };
 
 function formatDateRange(start?: Date | string | null, end?: Date | string | null) {
@@ -27,36 +30,64 @@ function formatDateRange(start?: Date | string | null, end?: Date | string | nul
   return `Until ${fmt(end!)}`;
 }
 
-type NavView = 'ideas' | 'planner' | 'timeline';
+type NavView = 'ideas' | 'planner' | 'map' | 'timeline';
 
-function SegmentedNav({ tripId, active }: { tripId: string; active: NavView }) {
-  const items: { key: NavView; label: string; href: string }[] = [
-    { key: 'ideas', label: 'Ideas', href: `/trips/${tripId}/ideas` },
-    { key: 'planner', label: 'Planner', href: `/trips/${tripId}` },
-    { key: 'timeline', label: 'Timeline', href: `/trips/${tripId}/timeline` },
-  ];
+const itemClass = 'px-3 py-1 rounded-md text-sm font-medium transition-colors whitespace-nowrap';
+const activeClass = 'bg-white text-ocean-700 shadow-sm border border-sand-200';
+const inactiveClass = 'text-sand-500 hover:text-sand-700';
+
+function SegmentedNav({
+  tripId,
+  active,
+  isMobile,
+  isOnPlannerRoute,
+  onMobileViewChange,
+}: {
+  tripId: string;
+  active: NavView;
+  isMobile: boolean;
+  isOnPlannerRoute: boolean;
+  onMobileViewChange?: (view: 'map' | 'planner') => void;
+}) {
+  const cls = (key: NavView) => [itemClass, active === key ? activeClass : inactiveClass].join(' ');
+
+  if (!isMobile) {
+    const desktopItems = [
+      { key: 'ideas' as NavView, label: 'Ideas', href: `/trips/${tripId}/ideas` },
+      { key: 'planner' as NavView, label: 'Planner', href: `/trips/${tripId}` },
+      { key: 'timeline' as NavView, label: 'Timeline', href: `/trips/${tripId}/timeline` },
+    ];
+    return (
+      <nav className="inline-flex items-center rounded-lg border border-sand-200 bg-sand-50 p-0.5 gap-0.5 shrink-0">
+        {desktopItems.map(({ key, label, href }) => (
+          <Link key={key} href={href} className={cls(key)}>{label}</Link>
+        ))}
+      </nav>
+    );
+  }
+
+  // Mobile: 4-item nav
+  const useButton = isOnPlannerRoute && !!onMobileViewChange;
 
   return (
     <nav className="inline-flex items-center rounded-lg border border-sand-200 bg-sand-50 p-0.5 gap-0.5 shrink-0">
-      {items.map(({ key, label, href }) => (
-        <Link
-          key={key}
-          href={href}
-          className={[
-            'px-3 py-1 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
-            active === key
-              ? 'bg-white text-ocean-700 shadow-sm border border-sand-200'
-              : 'text-sand-500 hover:text-sand-700',
-          ].join(' ')}
-        >
-          {label}
-        </Link>
-      ))}
+      <Link href={`/trips/${tripId}/ideas`} className={cls('ideas')}>Ideas</Link>
+      {useButton ? (
+        <button onClick={() => onMobileViewChange!('planner')} className={cls('planner')}>Planner</button>
+      ) : (
+        <Link href={`/trips/${tripId}`} className={cls('planner')}>Planner</Link>
+      )}
+      {useButton ? (
+        <button onClick={() => onMobileViewChange!('map')} className={cls('map')}>Map</button>
+      ) : (
+        <Link href={`/trips/${tripId}?view=map`} className={cls('map')}>Map</Link>
+      )}
+      <Link href={`/trips/${tripId}/timeline`} className={cls('timeline')}>Timeline</Link>
     </nav>
   );
 }
 
-export function TripHeader({ trip, memberCount, entryCount }: Props) {
+export function TripHeader({ trip, memberCount, entryCount, mobileView, onMobileViewChange }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -65,14 +96,19 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
+  const isMobile = useIsMobile();
   const isOwner = session?.user?.id === trip.ownerId;
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
+
+  const isOnPlannerRoute = !pathname?.endsWith('/timeline') && !pathname?.endsWith('/ideas');
 
   // Determine active segment
   const activeView: NavView = pathname?.endsWith('/timeline')
     ? 'timeline'
     : pathname?.endsWith('/ideas')
     ? 'ideas'
+    : isMobile && mobileView === 'map'
+    ? 'map'
     : 'planner';
 
   async function handleDelete() {
@@ -152,7 +188,13 @@ export function TripHeader({ trip, memberCount, entryCount }: Props) {
         </div>
 
         <div className="w-full sm:flex-1 flex justify-center">
-          <SegmentedNav tripId={trip.id} active={activeView} />
+          <SegmentedNav
+            tripId={trip.id}
+            active={activeView}
+            isMobile={isMobile}
+            isOnPlannerRoute={isOnPlannerRoute}
+            onMobileViewChange={onMobileViewChange}
+          />
         </div>
       </div>
 

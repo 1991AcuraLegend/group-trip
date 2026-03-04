@@ -11,30 +11,39 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-sand-50 via-ocean-50 to-sand-100">
       {/* Hero */}
-      <section className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
+      <section className="flex flex-col items-center justify-center min-h-screen px-6 text-center py-12">
         <div className="animate-fade-in-up max-w-3xl mx-auto">
-          <div className="mb-6 inline-flex items-center gap-2 bg-ocean-100 text-ocean-700 px-4 py-1.5 rounded-full text-sm font-medium">
+          <div className="mb-4 md:mb-8 flex justify-center">
+            <Image
+              src="/TravelPlannerIcon.png"
+              alt="TravelPlanner"
+              width={80}
+              height={80}
+              className="w-16 md:w-20 h-16 md:h-20"
+            />
+          </div>
+          <div className="mb-4 md:mb-6 inline-flex items-center gap-2 bg-ocean-100 text-ocean-700 px-4 py-1.5 rounded-full text-xs md:text-sm font-medium">
             ✈️ Trip planning reimagined
           </div>
-          <h1 className="font-display text-5xl md:text-7xl text-ocean-900 mb-6 leading-tight">
+          <h1 className="font-display text-3xl md:text-7xl text-ocean-900 mb-4 md:mb-6 leading-tight">
             Plan your next<br />
             <span className="text-coral-500">adventure</span>, together
           </h1>
-          <p className="text-sand-600 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sand-600 text-base md:text-xl mb-6 md:mb-10 max-w-2xl mx-auto leading-relaxed">
             From brainstorming ideas to booking confirmations, organize every detail of your trip in one beautiful place. 
             Track flights, hotels, restaurants, and activities with interactive maps and timelines. 
             Invite friends to collaborate and keep everyone on the same page.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
             <Link
               href="/register"
-              className="inline-flex items-center justify-center px-8 py-3.5 bg-ocean-600 hover:bg-ocean-700 text-white font-medium rounded-lg transition-all duration-200 active:scale-[0.98] text-base"
+              className="inline-flex items-center justify-center px-6 md:px-8 py-2.5 md:py-3.5 bg-ocean-600 hover:bg-ocean-700 text-white font-medium rounded-lg transition-all duration-200 active:scale-[0.98] text-sm md:text-base"
             >
               Get Started — it&apos;s free
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center px-8 py-3.5 bg-sand-100 hover:bg-sand-200 text-sand-800 border border-sand-300 font-medium rounded-lg transition-all duration-200 active:scale-[0.98] text-base"
+              className="inline-flex items-center justify-center px-6 md:px-8 py-2.5 md:py-3.5 bg-sand-100 hover:bg-sand-200 text-sand-800 border border-sand-300 font-medium rounded-lg transition-all duration-200 active:scale-[0.98] text-sm md:text-base"
             >
               Sign In
             </Link>

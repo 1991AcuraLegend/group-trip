@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { forgotPasswordSchema } from "@/validators/auth";
+import { getBaseUrl } from "@/lib/base-url";
 import { ZodError } from "zod";
 
 export async function POST(request: Request) {
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
 
     if (user) {
       // MVP: log the reset link to the console instead of sending an email
-      const baseUrl = process.env.NEXTAUTH_URL || 'https://grouptravel.cbesmer.com';
+      const baseUrl = getBaseUrl();
       console.log(
         `Password reset link for ${email}: ${baseUrl}/reset?token=mock-token-${user.id}`
       );

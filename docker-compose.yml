@@ -28,7 +28,7 @@ services:
     container_name: travelplanner-app
     environment:
       DATABASE_URL: postgresql://${DB_USER:-traveler}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-travelplanner}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000} # dev default; deploy file requires this to be set explicitly
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
       NODE_ENV: ${NODE_ENV:-production}
     ports:

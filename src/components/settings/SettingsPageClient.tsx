@@ -1,12 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/providers/ThemeProvider';
 import type { Theme } from '@/providers/ThemeProvider';
+import { ImportTripModal } from '@/components/dashboard/ImportTripModal';
 
 export function SettingsPageClient() {
+  const [importOpen, setImportOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
   function handleThemeChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -58,8 +61,18 @@ export function SettingsPageClient() {
               </Link>
             </div>
           </div>
+
+          {/* Import Trip section */}
+          <div className="glass rounded-xl border border-sand-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-1 text-base font-semibold text-ocean-800">Import Trip</h2>
+            <p className="mb-4 text-sm text-sand-500">Import an existing trip from JSON data.</p>
+            <Button variant="secondary" onClick={() => setImportOpen(true)}>
+              Import Trip Data
+            </Button>
+          </div>
         </div>
       </div>
+      <ImportTripModal isOpen={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }

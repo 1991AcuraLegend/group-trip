@@ -9,6 +9,12 @@ REPO_NAME="group-trip"
 IMAGE_TAG="latest"
 IMAGE_NAME="ghcr.io/${GHCR_USERNAME}/${REPO_NAME}:${IMAGE_TAG}"
 
+# Check for --no-cache flag
+NO_CACHE=""
+if [[ "$*" == *"--no-cache"* ]]; then
+  NO_CACHE="--no-cache"
+fi
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -16,6 +22,9 @@ echo "  🐳 Building and pushing Docker image to GitHub Container Registry"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "  Image: ${IMAGE_NAME}"
+if [[ -n "$NO_CACHE" ]]; then
+  echo "  Cache: Disabled"
+fi
 echo ""
 
 # ── Verify Docker is running ───────────────────────────────────────────────────
@@ -27,7 +36,7 @@ fi
 # ── Build the image ────────────────────────────────────────────────────────────
 echo "📦 Building Docker image..."
 cd "$DIR"
-docker build --no-cache -t "${IMAGE_NAME}" .
+docker build $NO_CACHE -t "${IMAGE_NAME}" .
 
 if [[ $? -ne 0 ]]; then
   echo "❌ Build failed."
