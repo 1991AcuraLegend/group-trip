@@ -6,7 +6,7 @@ import type { MemberRole } from '@prisma/client';
 
 type Params = { params: { tripId: string } };
 
-const baseUrl = process.env.NEXTAUTH_URL || 'https://grouptravel.cbesmer.com';
+const baseUrl = process.env.NEXTAUTH_URL || 'https://grouptrip.cbesmer.com';
 
 export async function GET(_request: NextRequest, { params }: Params) {
   const { tripId } = params;
