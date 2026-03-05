@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -14,8 +14,26 @@ type Props = {
 export function ImportTripModal({ isOpen, onClose }: Props) {
   const [jsonText, setJsonText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const importTrip = useImportTrip();
   const router = useRouter();
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      try {
+        JSON.parse(text);
+        setJsonText(text);
+        setError(null);
+      } catch {
+        setError('The selected file is not valid JSON.');
+      }
+    };
+    reader.readAsText(file);
+  }
 
   function handleClose() {
     setJsonText('');
@@ -51,8 +69,15 @@ export function ImportTripModal({ isOpen, onClose }: Props) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Import Trip">
       <div className="space-y-4">
         <p className="text-sm text-sand-600">
-          Paste the exported trip JSON below to create a new trip with all its entries.
+          Select a trip JSON file or paste JSON directly into the field below.
         </p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={handleFileChange}
+          className="text-sm text-sand-500 file:mr-3 file:rounded-md file:border-0 file:bg-ocean-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-ocean-700 hover:file:bg-ocean-100"
+        />
         <textarea
           value={jsonText}
           onChange={(e) => setJsonText(e.target.value)}

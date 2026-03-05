@@ -2,7 +2,7 @@ export const AI_TRIP_PROMPT = `===
 
 Based on the trip description above, generate a detailed trip plan as a JSON object. Create a full itinerary with activities throughout each day from morning to evening. Include three meals per day (breakfast, lunch, dinner) — except skip meals that occur before arrival flights land or after departure flights take off.
 
-Output ONLY the raw JSON — no markdown fences, no explanation, no commentary.
+Validate that your output is well-formed JSON, then save it to a file named trip-plan.json. Do not output anything else — no markdown fences, no explanation, no commentary.
 
 REQUIRED FORMAT:
 {

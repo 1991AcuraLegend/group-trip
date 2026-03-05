@@ -178,7 +178,7 @@ export function CreateTripModal({ isOpen, onClose }: Props) {
             <ol className="text-sm text-sand-600 list-decimal list-inside space-y-2">
               <li>Describe your ideal trip in the box below. What dates will it span? Where do you want to go? What kind of activities? Go crazy with it!</li>
               <li>Press the &quot;Copy Prompt&quot; button, then paste the result into your AI of choice.</li>
-              <li>Copy the AI&#39;s output and paste it into the Import Trip section under Settings.</li>
+              <li>Your AI will save a file called <strong>trip-plan.json</strong>. Go to <strong>Settings → Import Trip</strong> and upload that file (or paste the JSON if you copied it to your clipboard instead).</li>
             </ol>
             <textarea
               ref={textareaRef}
