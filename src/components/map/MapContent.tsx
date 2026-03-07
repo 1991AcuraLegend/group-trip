@@ -31,16 +31,22 @@ function AutoZoom({ entries, visible }: { entries: MappableEntry[]; visible?: bo
     if (visible === false) return; // skip when container is hidden
     map.invalidateSize();
 
-    if (entries.length === 0) {
-      map.setView([20, 0], 2);
-      return;
-    }
-    if (entries.length === 1) {
-      map.setView([entries[0].lat, entries[0].lng], 14);
-      return;
-    }
-    const bounds = L.latLngBounds(entries.map((e) => [e.lat, e.lng] as [number, number]));
-    map.fitBounds(bounds, { padding: [50, 50] });
+    const applyZoom = () => {
+      if (entries.length === 0) {
+        map.setView([20, 0], 2);
+        return;
+      }
+      if (entries.length === 1) {
+        map.setView([entries[0].lat, entries[0].lng], 14);
+        return;
+      }
+      const bounds = L.latLngBounds(entries.map((e) => [e.lat, e.lng] as [number, number]));
+      map.fitBounds(bounds, { padding: [50, 50] });
+    };
+
+    // Defer zoom until after the browser has recalculated container dimensions
+    const id = setTimeout(applyZoom, 0);
+    return () => clearTimeout(id);
   }, [entries, map, visible]);
 
   return null;

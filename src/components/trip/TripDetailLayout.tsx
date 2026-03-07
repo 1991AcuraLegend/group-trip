@@ -88,7 +88,7 @@ export function TripDetailLayout({ tripId }: Props) {
 
         {/* Map */}
         <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} lg:flex flex-1 relative w-full lg:flex-1`}>
-          <TripMap entries={mappableEntries} visible={mobileView === 'map'} selectedEntryId={selectedEntryId} onSelectEntry={setSelectedEntryId} />
+          <TripMap entries={mappableEntries} visible={!isMobile || mobileView === 'map'} selectedEntryId={selectedEntryId} onSelectEntry={setSelectedEntryId} />
         </div>
       </div>
     </div>

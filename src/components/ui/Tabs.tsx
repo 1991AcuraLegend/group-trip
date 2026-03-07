@@ -15,13 +15,13 @@ type Props = {
 export function Tabs({ tabs, activeTab, onChange }: Props) {
   return (
     <div className="border-b border-sand-200">
-      <div className="flex w-full flex-wrap">
+      <div className="flex w-full">
         {tabs.map((tab) => (
         <button
           key={tab.value}
           onClick={() => onChange(tab.value)}
           className={[
-            'flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
+            'flex flex-1 items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-3 py-2.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap',
             'focus:outline-none',
             activeTab === tab.value
               ? 'border-b-2 border-ocean-500 text-ocean-600 -mb-px'
