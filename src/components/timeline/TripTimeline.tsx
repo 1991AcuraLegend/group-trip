@@ -67,9 +67,10 @@ export function TripTimeline({ tripId }: Props) {
         break;
       }
     }
-    if (firstDay) {
+    if (firstDay !== null) {
+      const firstDayString = firstDay.toDateString();
       const dayIndex = dayMarkers.findIndex(
-        (d) => new Date(d).toDateString() === new Date(firstDay).toDateString()
+        (d) => new Date(d).toDateString() === firstDayString
       );
       const scrollLeft = Math.max(0, dayIndex * (COLUMN_WIDTH + COLUMN_GAP) - COLUMN_GAP);
       scrollRef.current.scrollLeft = scrollLeft;

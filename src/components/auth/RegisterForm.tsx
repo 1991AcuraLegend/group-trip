@@ -7,12 +7,13 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { getSafeClientRedirectPath } from "@/lib/redirects";
 import { registerSchema, RegisterInput } from "@/validators/auth";
 
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = getSafeClientRedirectPath(searchParams.get("callbackUrl"));
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -37,7 +38,9 @@ export function RegisterForm() {
     });
 
     if (res.status === 409) {
-      setServerError("An account with that email already exists");
+      setServerError(
+        "Unable to create account. Please try a different email or sign in."
+      );
       return;
     }
 

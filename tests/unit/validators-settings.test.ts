@@ -4,8 +4,8 @@ import { changePasswordSchema, changeNameSchema } from '@/validators/settings';
 describe('changePasswordSchema', () => {
   const valid = {
     currentPassword: 'oldpassword',
-    newPassword: 'newpassword1',
-    confirmNewPassword: 'newpassword1',
+    newPassword: 'Newpassword1',
+    confirmNewPassword: 'Newpassword1',
   };
 
   it('accepts valid matching passwords', () => {
@@ -23,7 +23,17 @@ describe('changePasswordSchema', () => {
 
   it('rejects newPassword shorter than 8 characters', () => {
     expect(
-      changePasswordSchema.safeParse({ ...valid, newPassword: 'short', confirmNewPassword: 'short' }).success,
+      changePasswordSchema.safeParse({ ...valid, newPassword: 'Short1', confirmNewPassword: 'Short1' }).success,
+    ).toBe(false);
+  });
+
+  it('rejects newPassword without an uppercase letter', () => {
+    expect(
+      changePasswordSchema.safeParse({
+        ...valid,
+        newPassword: 'newpassword1',
+        confirmNewPassword: 'newpassword1',
+      }).success,
     ).toBe(false);
   });
 
@@ -31,9 +41,9 @@ describe('changePasswordSchema', () => {
     expect(changePasswordSchema.safeParse({ ...valid, confirmNewPassword: 'different' }).success).toBe(false);
   });
 
-  it('accepts newPassword of exactly 8 characters', () => {
+  it('accepts newPassword of exactly 8 characters when it meets complexity rules', () => {
     expect(
-      changePasswordSchema.safeParse({ ...valid, newPassword: 'exactly8', confirmNewPassword: 'exactly8' }).success,
+      changePasswordSchema.safeParse({ ...valid, newPassword: 'Abcdefg1', confirmNewPassword: 'Abcdefg1' }).success,
     ).toBe(true);
   });
 });

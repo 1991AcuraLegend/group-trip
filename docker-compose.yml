@@ -5,10 +5,8 @@ services:
     container_name: travelplanner-db
     environment:
       POSTGRES_USER: ${DB_USER:-traveler}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       POSTGRES_DB: ${DB_NAME:-travelplanner}
-    ports:
-      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,11 +23,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-build-time-placeholder-secret-32-characters}
     container_name: travelplanner-app
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-traveler}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-travelplanner}
+      DATABASE_URL: postgresql://${DB_USER:-traveler}:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/${DB_NAME:-travelplanner}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000} # dev default; deploy file requires this to be set explicitly
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required. Generate with: openssl rand -base64 32}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-TravelPlanner <onboarding@resend.dev>}
       NODE_ENV: ${NODE_ENV:-production}
     ports:
       - "${APP_PORT:-3000}:3000"

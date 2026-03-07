@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { sendPasswordResetEmail } from "@/lib/email";
 import { forgotPasswordSchema } from "@/validators/auth";
+import { rateLimit } from "@/lib/rate-limit";
 import { getBaseUrl } from "@/lib/base-url";
 import { ZodError } from "zod";
 
 export async function POST(request: Request) {
+  const blocked = await rateLimit(request, "auth");
+  if (blocked) return blocked;
+
   try {
     const body = await request.json();
     const { email } = forgotPasswordSchema.parse(body);
@@ -12,11 +18,21 @@ export async function POST(request: Request) {
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (user) {
-      // MVP: log the reset link to the console instead of sending an email
+      await prisma.passwordResetToken.updateMany({
+        where: { userId: user.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+
+      const token = randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+      await prisma.passwordResetToken.create({
+        data: { token, userId: user.id, expiresAt },
+      });
+
       const baseUrl = getBaseUrl();
-      console.log(
-        `Password reset link for ${email}: ${baseUrl}/reset?token=mock-token-${user.id}`
-      );
+      const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+      await sendPasswordResetEmail(email, resetUrl);
     }
 
     // Always return 200 — don't reveal whether the email exists

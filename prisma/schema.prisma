@@ -17,11 +17,25 @@ model User {
 
   ownedTrips   Trip[]       @relation("TripOwner")
   memberships  TripMember[]
+  passwordResetTokens PasswordResetToken[]
   flights      Flight[]
   lodgings     Lodging[]
   carRentals   CarRental[]
   restaurants  Restaurant[]
   activities   Activity[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Trip {

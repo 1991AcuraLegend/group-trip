@@ -62,7 +62,7 @@ Returns:
 
 ## Log Maintenance Strategy
 
-### Automatic Management (Runs Daily at 2am)
+### Scheduled Management (Recommended Daily at 2am)
 
 1. **Compression**: Logs older than 3 days are compressed to `.gz` format
    - Reduces disk usage by ~90%
@@ -76,6 +76,15 @@ Returns:
    - Original file renamed to `YYYY-MM-DD.1.log`
    - New `YYYY-MM-DD.log` continues receiving logs
    - Can have multiple rotations: `.1.log`, `.2.log`, etc.
+
+Use an external scheduler to call the maintenance endpoint once per day. Good options are cron, GitHub Actions, your hosting platform scheduler, or another trusted automation job.
+
+Example:
+
+```bash
+curl -X POST 'http://localhost:3000/api/logs/maintain' \
+   -H 'x-log-maintenance-secret: your-secret'
+```
 
 ### Manual Maintenance
 
@@ -137,7 +146,7 @@ When a button does nothing (like before), you can now:
 ## Performance
 
 - Log writes are **non-blocking** - rotation and maintenance run in background
-- Maintenance checks happen at 2am each day
+- Maintenance should be triggered by an external daily scheduler
 - Logs use **streaming writes** to minimize memory impact
 - Compressed logs reduce disk usage from ~350MB/week to ~35MB/week
 

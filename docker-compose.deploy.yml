@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: travelplanner-db
+    environment:
+      POSTGRES_USER: "${DB_USER:-traveler}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-password}"
+      POSTGRES_DB: "${DB_NAME:-travelplanner}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-traveler}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    image: ghcr.io/1991acuralegend/group-trip:latest
+    container_name: travelplanner-app
+    environment:
+      DATABASE_URL: "postgresql://${DB_USER:-traveler}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-travelplanner}"
+      NEXTAUTH_URL: "${NEXTAUTH_URL:?Error: NEXTAUTH_URL must be set (e.g. https://grouptravel.cbesmer.com)}"
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET:?Error: NEXTAUTH_SECRET must be set}"
+      RESEND_API_KEY: "${RESEND_API_KEY:?Error: RESEND_API_KEY must be set}"
+      RESEND_FROM_EMAIL: "${RESEND_FROM_EMAIL:-TravelPlanner <onboarding@resend.dev>}"
+      LOG_MAINTENANCE_SECRET: "${LOG_MAINTENANCE_SECRET:-}"
+      NODE_ENV: production
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/public/uploads
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads_data:

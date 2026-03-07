@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 import { registerApiSchema } from "@/validators/auth";
 import { ZodError } from "zod";
 
 export async function POST(request: Request) {
+  const blocked = await rateLimit(request, "auth");
+  if (blocked) return blocked;
+
   try {
     const body = await request.json();
     const { name, email, password } = registerApiSchema.parse(body);
@@ -12,7 +16,7 @@ export async function POST(request: Request) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json(
-        { error: "Email already in use" },
+        { error: "Unable to create account. Please try a different email or sign in." },
         { status: 409 }
       );
     }
@@ -34,7 +38,7 @@ export async function POST(request: Request) {
     }
     console.error("[REGISTER] Error:", error);
     return NextResponse.json(
-      { error: "Internal server error", details: (error as any)?.message || String(error) },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

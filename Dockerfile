@@ -27,8 +27,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+ARG NEXTAUTH_SECRET=build-time-placeholder-secret-32-characters
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+
 # Install OpenSSL for Prisma runtime
 RUN apk add --no-cache openssl
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
 # Copy package files
 COPY package*.json ./
@@ -38,11 +44,15 @@ COPY prisma ./prisma/
 RUN npm ci --omit=dev
 
 # Copy built application from builder
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Create uploads directory if it doesn't exist and ensure it's writable
-RUN mkdir -p /app/public/uploads && chmod 755 /app/public/uploads
+RUN mkdir -p /app/public/uploads \
+  && chown -R nextjs:nodejs /app \
+  && chmod 755 /app/public/uploads
+
+USER nextjs
 
 # Expose port
 EXPOSE 3000

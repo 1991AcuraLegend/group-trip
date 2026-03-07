@@ -1,166 +1,152 @@
-# 🌍 TravelPlanner
+# TravelPlanner
 
-A collaborative web application for planning group travel together. Create trips, organize travel details, visualize them on interactive maps, and share with travel companions.
+TravelPlanner is a collaborative trip-planning app built with Next.js, Prisma, NextAuth, and PostgreSQL. It supports shared trips, role-based access, interactive maps, timeline views, and idea-to-plan workflows.
 
-## ✨ Features
+## Current Status
 
-### Trip Management
-- **Create and organize trips**: Set up trips with destination details
-- **Comprehensive entry types**: Track all aspects of your journey
-  - ✈️ Flights
-  - 🏨 Lodging
-  - 🚗 Car Rentals
-  - 🍽️ Restaurants
-  - 🎭 Activities
-- **Detailed entry information**: Add dates, times, addresses, and descriptions for each item
-- **Timeline view**: See all trip activities organized chronologically
+- Production build, lint, and unit tests pass.
+- Core trip planning and sharing flows are implemented.
+- Password reset is implemented with time-limited tokens and Resend-backed email delivery in production.
+- Log maintenance should be triggered by an external scheduler calling the maintenance API, not by in-process timers inside the web app.
 
-### Collaboration & Sharing
-- **Share with others**: Generate shareable links to invite travel companions
-- **Member management**: View all trip members and see who's invited
-- **Role-based access**: Trip owners and collaborators with different permission levels
-- **Easy joining**: Collaborators can join trips via share codes
+## Features
 
-### Visualization
-- **Interactive map**: View all trip destinations and points of interest on an OpenStreetMap
-- **Smart geocoding**: Automatic location lookup for addresses
-- **Color-coded markers**: Different colors for different entry types
+- Shared trip management with owner, collaborator, and viewer roles
+- Entry support for flights, lodging, car rentals, restaurants, and activities
+- Separate idea and confirmed-plan workflows
+- Timeline and map views for trip visualization
+- Share-code based joining with owner-controlled permissions
+- User settings for name and password changes
 
-### Account Management
-- **User authentication**: Secure login and registration
-- **Password reset**: Recover your account if needed
-- **Profile settings**: Change your name and password
-
-## 🚀 Quick Start
+## Local Development
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL database
 
-### Installation
+- Node.js 20+
+- PostgreSQL 16+
 
-1. **Clone and install dependencies**
-   ```bash
-   npm install
-   ```
+### Setup
 
-2. **Set up environment variables**
-   Create a `.env.local` file with:
-   ```
-   DATABASE_URL="postgresql://user:password@localhost:5432/travelplanner"
-   NEXTAUTH_SECRET="your-secret-key"
-   NEXTAUTH_URL="http://localhost:3000"
-   ```
+1. Install dependencies.
 
-3. **Set up the database**
-   ```bash
-   npx prisma migrate dev
-   ```
-
-### Running the Application
-
-- **Development server** (port 3000):
-  ```bash
-  npm run dev
-  ```
-
-- **Production build**:
-  ```bash
-  npm run build
-  ```
-
-### Testing
-
-- **Unit tests**:
-  ```bash
-  npm run test
-  ```
-
-- **End-to-end tests** (requires dev server running):
-  ```bash
-  npm run test:e2e
-  ```
-
-- **Linting**:
-  ```bash
-  npm run lint
-  ```
-
-### Seed Data (safe by default)
-
-The seed script is intentionally guarded to prevent accidental data changes.
-
-- Local/dev seed:
-  ```bash
-  ./seed-db.sh --force
-  ```
-
-- Production environments require an additional explicit flag:
-  ```bash
-  NODE_ENV=production ./seed-db.sh --force --allow-production
-  ```
-
-## 🏗️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript (strict mode) |
-| Database | PostgreSQL with Prisma ORM |
-| Authentication | NextAuth.js (Credentials provider) |
-| Maps | Leaflet + OpenStreetMap (no API keys required) |
-| Geocoding | Nominatim (OpenStreetMap-based) |
-| Styling | Tailwind CSS |
-| State Management | TanStack React Query |
-| Forms | React Hook Form with Zod validation |
-| Testing | Vitest (unit), Playwright (e2e) |
-
-## 📁 Project Structure
-
-```
-src/
-├── app/                 # Next.js App Router pages and API routes
-├── components/          # Reusable React components
-├── hooks/              # Custom React hooks for data fetching
-├── lib/                # Utility functions and helpers
-├── providers/          # Context providers (Auth, Query, Theme)
-├── types/              # TypeScript type definitions
-├── validators/         # Zod validation schemas
-└── middleware.ts       # Route protection middleware
-```
-
-## 🔐 Authentication
-
-- Secure password authentication with bcryptjs
-- Session-based authentication with NextAuth.js
-- Protected routes for authenticated users
-- Public pages for login, registration, and trip joining
-
-## 📊 Database Schema
-
-Key entities:
-- **Users**: User accounts with email and password
-- **Trips**: Travel plans with destinations
-- **Trip Entries**: Five types (flights, lodging, car rentals, restaurants, activities)
-- **Trip Members**: Users collaborating on trips with role-based access
-
-## 🎯 Getting Involved
-
-To start contributing or exploring the codebase:
-
-1. Check `CLAUDE.md` for architecture details and key patterns
-2. Review `MASTER_PLAN.md` for the development roadmap
-3. Explore individual plan files in `plans/` for feature specifications
-
-## 📝 Environment Setup
-
-For database GUI:
 ```bash
+npm install
+```
+
+2. Copy the example env file and set real values.
+
+```bash
+cp .env.example .env.local
+```
+
+Required values:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/travelplanner"
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="$(openssl rand -base64 32)"
+RESEND_API_KEY="your-resend-api-key"
+RESEND_FROM_EMAIL="TravelPlanner <noreply@mail.cbesmer.com>"
+```
+
+Resend setup for live password reset emails:
+
+1. Create an API key in Resend.
+2. Set `RESEND_API_KEY` in your local env or deploy env.
+3. Set `RESEND_FROM_EMAIL` to a sender address backed by a verified Resend domain.
+4. Example verified sender: `TravelPlanner <noreply@mail.cbesmer.com>`.
+
+3. Apply migrations.
+
+```bash
+npx prisma migrate dev
+```
+
+4. Start the app.
+
+```bash
+npm run dev
+```
+
+### Useful Commands
+
+```bash
+npm run build
+npm run lint
+npm run test
+npm run test:e2e
 npx prisma studio
 ```
 
-This opens an interactive Prisma Studio for managing your database.
+### Seed Data
 
----
+```bash
+./seed-db.sh --force
+```
 
-**Happy travels! 🧳**
+Production seeding requires an explicit second flag:
+
+```bash
+NODE_ENV=production ./seed-db.sh --force --allow-production
+```
+
+## Docker
+
+### Local Docker Compose
+
+Use [docker-compose.yml](/Users/corey/Projects/TravelPlanner/docker-compose.yml) for local containerized development.
+
+```bash
+cp .env.docker.example .env.docker
+docker compose --env-file .env.docker up --build
+```
+
+### Deployment Compose
+
+Use [docker-compose.deploy.yml](/Users/corey/Projects/TravelPlanner/docker-compose.deploy.yml) for image-based deployment.
+
+- It expects a prebuilt image in GHCR.
+- `NEXTAUTH_URL` and `NEXTAUTH_SECRET` are required.
+- `RESEND_API_KEY` is required if you want password reset emails to work in production.
+- `RESEND_FROM_EMAIL` should be a verified sender address for live delivery.
+- The database is only exposed on the internal compose network.
+- `LOG_MAINTENANCE_SECRET` can be set to protect the maintenance endpoint.
+
+Run:
+
+```bash
+docker compose -f docker-compose.deploy.yml --env-file .env.docker up -d
+```
+
+Typical production values in `.env.docker`:
+
+```env
+NEXTAUTH_URL=https://grouptravel.cbesmer.com
+NEXTAUTH_SECRET=generate-a-long-random-secret
+RESEND_API_KEY=re_your_real_key
+RESEND_FROM_EMAIL="TravelPlanner <noreply@mail.cbesmer.com>"
+```
+
+## Logging
+
+Application logs are written to `.logs/` and can be inspected via the endpoints documented in [LOGGING.md](/Users/corey/Projects/TravelPlanner/LOGGING.md).
+
+For production log maintenance, schedule a daily authenticated `POST` to `/api/logs/maintain` from your platform cron, CI, or host scheduler.
+
+## Tech Stack
+
+- Next.js 14 App Router
+- TypeScript
+- PostgreSQL + Prisma
+- NextAuth credentials auth
+- React Query
+- React Hook Form + Zod
+- Tailwind CSS
+- Leaflet + OpenStreetMap
+- Vitest + Playwright
+
+## Project Notes
+
+- Architecture and codebase conventions: [CLAUDE.md](/Users/corey/Projects/TravelPlanner/CLAUDE.md)
+- Product roadmap: [MASTER_PLAN.md](/Users/corey/Projects/TravelPlanner/MASTER_PLAN.md)
+- Feature plans: [plans](/Users/corey/Projects/TravelPlanner/plans)

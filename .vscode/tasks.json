@@ -1,0 +1,52 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run TravelPlanner Dev",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "dev-server",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "resend-direct-test",
+			"type": "shell",
+			"command": "sh",
+			"args": [
+				"-c",
+				"RESEND_API_KEY=$(sed -n 's/^RESEND_API_KEY=\"\\(.*\\)\"$/\\1/p' .env) && curl --silent --show-error https://api.resend.com/emails -H \"Authorization: Bearer $RESEND_API_KEY\" -H 'Content-Type: application/json' -d '{\"from\":\"onboarding@resend.dev\",\"to\":[\"cbesmer1@gmail.com\"],\"subject\":\"TravelPlanner direct Resend test\",\"html\":\"<p>TravelPlanner direct Resend API test.</p>\"}'"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "dev-server-clean",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}

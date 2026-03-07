@@ -25,6 +25,9 @@ yarn-error.log*
 .logs/
 
 # local env files
+.env
+.env.docker
+.env.docker.localhost
 .env*.local
 
 # vercel
@@ -53,4 +56,3 @@ start.sh
 stop.sh
 .tunnel.log
 .tunnel.pid
-docker-compose.deploy.yml

@@ -7,12 +7,13 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { getSafeClientRedirectPath } from "@/lib/redirects";
 import { loginSchema, LoginInput } from "@/validators/auth";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = getSafeClientRedirectPath(searchParams.get("callbackUrl"));
   const [authError, setAuthError] = useState<string | null>(null);
 
   const {

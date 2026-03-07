@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { loginSchema, registerSchema, forgotPasswordSchema } from '@/validators/auth';
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordApiSchema,
+  resetPasswordSchema,
+} from '@/validators/auth';
 
 describe('loginSchema', () => {
   it('accepts valid email and password', () => {
@@ -32,8 +38,8 @@ describe('registerSchema', () => {
   const valid = {
     name: 'Alice Smith',
     email: 'alice@example.com',
-    password: 'securepass',
-    confirmPassword: 'securepass',
+    password: 'Securepass1',
+    confirmPassword: 'Securepass1',
   };
 
   it('accepts valid registration data', () => {
@@ -41,7 +47,25 @@ describe('registerSchema', () => {
   });
 
   it('rejects when password is shorter than 8 characters', () => {
-    const result = registerSchema.safeParse({ ...valid, password: 'short', confirmPassword: 'short' });
+    const result = registerSchema.safeParse({ ...valid, password: 'Short1', confirmPassword: 'Short1' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects when password is missing an uppercase letter', () => {
+    const result = registerSchema.safeParse({
+      ...valid,
+      password: 'securepass1',
+      confirmPassword: 'securepass1',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects when password is missing a number', () => {
+    const result = registerSchema.safeParse({
+      ...valid,
+      password: 'Securepass',
+      confirmPassword: 'Securepass',
+    });
     expect(result.success).toBe(false);
   });
 
@@ -81,5 +105,33 @@ describe('forgotPasswordSchema', () => {
 
   it('rejects a missing email', () => {
     expect(forgotPasswordSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+describe('resetPasswordSchema', () => {
+  const valid = {
+    token: 'token-123',
+    password: 'Resetpass1',
+    confirmPassword: 'Resetpass1',
+  };
+
+  it('accepts a valid token and password', () => {
+    expect(resetPasswordSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it('rejects when passwords do not match', () => {
+    expect(
+      resetPasswordSchema.safeParse({ ...valid, confirmPassword: 'Resetpass2' }).success
+    ).toBe(false);
+  });
+
+  it('rejects weak passwords', () => {
+    expect(
+      resetPasswordSchema.safeParse({ ...valid, password: 'weakpass', confirmPassword: 'weakpass' }).success
+    ).toBe(false);
+  });
+
+  it('accepts the API schema payload', () => {
+    expect(resetPasswordApiSchema.safeParse({ token: valid.token, password: valid.password }).success).toBe(true);
   });
 });

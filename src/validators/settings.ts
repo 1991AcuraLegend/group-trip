@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { passwordSchema } from "@/validators/auth";
 
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "New password must be at least 8 characters"),
+    newPassword: passwordSchema,
     confirmNewPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
@@ -14,7 +15,7 @@ export const changePasswordSchema = z
 // Server-side schema (no confirmNewPassword)
 export const changePasswordApiSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "New password must be at least 8 characters"),
+  newPassword: passwordSchema,
 });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
