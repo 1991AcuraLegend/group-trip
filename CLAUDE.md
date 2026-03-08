@@ -25,6 +25,28 @@ NEXTAUTH_SECRET="your-secret-key"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
+## Deployment
+
+Remote deploy host is reachable with:
+
+```bash
+ssh cbesmer@ssh.cbesmer.com
+```
+
+Remote deployment files live in:
+
+```bash
+~/Development/DockerPackages/TravelPlanner
+```
+
+In that directory, `./pull-latest.sh` runs the watchtower task to pull the latest Docker images on the host. Use it as part of deployment and troubleshooting when the remote host needs to refresh containers from the registry.
+
+Current confirmed script contents:
+
+```bash
+docker compose -f docker-compose.deploy.yml exec watchtower /watchtower --run-once --cleanup travelplanner-app travelplanner-db
+```
+
 ## Architecture
 
 Next.js 14 App Router, TypeScript strict, PostgreSQL via Prisma, Tailwind CSS.

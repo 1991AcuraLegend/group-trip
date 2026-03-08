@@ -51,6 +51,10 @@ public/uploads/*
 .pids
 .nextjs.log
 
+# Claude local state
+.claude/settings.local.json
+.claude/agent-memory/
+
 # scripts
 start.sh
 stop.sh
